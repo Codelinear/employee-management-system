@@ -18,7 +18,7 @@ model Employee {
   firstName     String
   lastName      String
   email         String   @unique
-  assignedEmail String
+  assignedEmail String   @unique
   phone         String   @unique
   dob           DateTime
   relieved      Boolean  @default(false)

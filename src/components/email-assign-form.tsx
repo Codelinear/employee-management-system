@@ -60,12 +60,10 @@ const EmailAssignForm = () => {
       toast({
         description: "Employee added successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem with your request.",
-        // action: <ToastAction altText="Try again">Try again</ToastAction>,
+        title: error.response.data.message,
       });
     } finally {
       setLoading(false);

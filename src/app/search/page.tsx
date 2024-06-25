@@ -105,7 +105,7 @@ const Search = () => {
                         </p>
                       </div>
                       <div className="flex justify-between items-center my-3">
-                        <strong>Email</strong>
+                        <strong>Assigned email</strong>
                         <p>{element.assignedEmail}</p>
                       </div>
                       <div className="flex justify-between items-center my-3">
