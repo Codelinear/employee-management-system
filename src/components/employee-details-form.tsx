@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { Inter } from "next/font/google";
 import { useStore } from "@/store";
 import { useToast } from "@/components/ui/use-toast";
+import Header from "@/components/navbar";
 
 const inter = Inter({ subsets: ["latin"], weight: "400" });
 

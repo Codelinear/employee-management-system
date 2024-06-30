@@ -1,18 +1,15 @@
+import { join } from "path";
 import { z } from "zod";
 
 export const employeeDetailsSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email(),
-  assignedEmail: z.string().email().optional(),
+  name: z.string(),
+  employeeId: z.string(),
+  personalEmail: z.string().email(),
+  companyEmail: z.string().email(),
+  department: z.string(),
   phone: z.number(),
-  dob: z.date(),
-  relieved: z.boolean().optional(),
-  address: z.string(),
-  salary: z.number(),
-  // assets: z.array(z.string()),
-  assets: z.string(),
-  increment: z.number().optional(),
+  currentRole: z.string(),
+  joiningDate: z.string(),
 });
 
 export const relieveEmployeeSchema = z.object({
@@ -24,4 +21,9 @@ export const relieveEmployeeSchema = z.object({
   contact: z.string(),
   dateOfIssuance: z.date(),
   reason: z.string(),
+});
+
+export const loginSchema = z.object({
+  username: z.string().email(),
+  password: z.string(),
 });

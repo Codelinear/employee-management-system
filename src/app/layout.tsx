@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Employee Management System",
   description:
     "This is the application for the Employee Management System who manages all the employees of the company.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

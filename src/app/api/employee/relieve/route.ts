@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 export const PUT = async (req: NextRequest) => {
   try {
     const employeeId = req.nextUrl.searchParams.get("employeeId");

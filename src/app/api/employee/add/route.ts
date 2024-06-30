@@ -1,44 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import sendgrid from "@sendgrid/mail";
 import prisma from "@/lib/prisma";
-import {
-  PrismaClientKnownRequestError,
-  PrismaClientValidationError,
-} from "@prisma/client/runtime/library";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { Asset } from "@/types";
+
+export const maxDuration = 60;
 
 export const POST = async (req: NextRequest) => {
   try {
-    const employeeDetails = await req.json();
+    const { employee, assets } = await req.json();
 
-    const {
-      firstName,
-      lastName,
-      email,
-      dob,
-      phone,
-      address,
-      salary,
-      assets,
-      assignedEmail,
-      password,
-      increment,
-    } = employeeDetails;
-
-    const employee = {
-      firstName,
-      lastName,
-      email,
-      dob,
-      phone,
-      address,
-      salary,
-      assets: ["laptop", "bag", "stickerss"],
-      assignedEmail,
-      increment,
-    };
-
-    await prisma.employee.create({
+    const newEmployee = await prisma.employee.create({
       data: employee,
+    });
+
+    const assetWithEmployeeId = assets.map((asset: Asset) => ({
+      ...asset,
+      ownerId: newEmployee.id,
+    }));
+
+    await prisma.assets.createMany({
+      data: assetWithEmployeeId,
     });
 
     // send an email using sendgrid
@@ -52,7 +34,7 @@ export const POST = async (req: NextRequest) => {
     // sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
     // const msg = {
-    //   to: "uzaifm127@gmail.com",
+    //   to: employee.personalEmail,
     //   from: "uzef@codelinear.com",
     //   subject: "Sending with SendGrid is Fun",
     //   text: "and easy to do anywhere, even with Node.js",

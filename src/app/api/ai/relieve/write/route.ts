@@ -13,7 +13,6 @@ export const POST = async (req: NextRequest) => {
       name,
       designation,
       department,
-      companyName,
       dateOfJoining,
       contact,
       dateOfIssuance,
@@ -46,7 +45,7 @@ export const POST = async (req: NextRequest) => {
        1. The name of the employee is ${name}.\n
        2. The designation of the employee is ${designation}.\n
        3. The department of the employee is ${department}.\n
-       4. The company name is ${companyName}.\n
+       4. The company name is Codelinear.\n
        5. The number of days in the leave.\n 
        6. The date of joining of employee is ${format(dateOfJoining, "PPP")}.\n 
        7. The reason for the leave.\n 

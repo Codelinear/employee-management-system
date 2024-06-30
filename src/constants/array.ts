@@ -5,6 +5,7 @@ export const relieveReasons = [
   "Lack of Adaptability",
   "Insubordination",
   "Chronic Absenteeism or Tardiness",
+  "Other",
 ];
 
 export const designations = [
@@ -31,14 +32,60 @@ export const departments = [
 export const navLinkItems = [
   {
     url: "/",
-    name: "Add",
-  },
-  {
-    url: "/search",
     name: "Employees",
   },
   {
-    url: "/relieve/search",
-    name: "Relieved",
+    url: "/add",
+    name: "Add Employee",
   },
+  {
+    url: "/relieve",
+    name: "Relieve Employee",
+  },
+];
+
+export const addEmployeesInputs = [
+  {
+    name: "name",
+    label: "Employee name",
+    placeholder: "Employee name",
+    type: "text",
+  },
+  {
+    name: "employeeId",
+    label: "Employee ID",
+    placeholder: "Auto generated",
+    type: "text",
+  },
+  {
+    name: "personalEmail",
+    label: "Company Email Address",
+    placeholder: "Email Address",
+    type: "email",
+  },
+  {
+    name: "companyEmail",
+    label: "Personal Email Address",
+    placeholder: "Email Address",
+    type: "email",
+  },
+  {
+    name: "department",
+    label: "Department",
+    placeholder: "Department",
+    type: "text",
+  },
+  {
+    name: "phone",
+    label: "Phone number",
+    placeholder: "Phone number",
+    type: "tel",
+  },
+  {
+    name: "currentRole",
+    label: "Current role",
+    placeholder: "Current role",
+    type: "text",
+  },
+  { name: "joiningDate", label: "Joining date", placeholder: "" },
 ];
