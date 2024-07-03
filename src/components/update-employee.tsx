@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Header from "@/components/navbar";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogFooter,
@@ -23,7 +22,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { departments, designations } from "@/constants/array";
 import { AssetsForm, UpdateEmployeeForm } from "@/types";
@@ -82,8 +80,6 @@ const UpdateEmployee = ({
   const personalEmailInputRef = useRef<HTMLInputElement>(null);
   const companyEmailInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
-
-  const router = useRouter();
 
   const { currentEmployee } = useStore();
 

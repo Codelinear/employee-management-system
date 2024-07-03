@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validator";
@@ -9,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Header from "@/components/navbar";
 import TextField from "@mui/material/TextField";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { styled } from "@mui/material";
 import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
@@ -101,13 +100,6 @@ const Login = () => {
                       }
                       disabled={loginLoading}
                     />
-                    {/* <Input
-                      {...field}
-                      type="email"
-                      placeholder="Username"
-                      className="w-full border-black placeholder:text-black"
-                      required
-                    /> */}
                   </FormControl>
                 </FormItem>
               )}
@@ -134,13 +126,6 @@ const Login = () => {
                       variant="outlined"
                       disabled={loginLoading}
                     />
-                    {/* <Input
-                      {...field}
-                      type="email"
-                      className="w-full my-6 border-black placeholder:text-black"
-                      placeholder="Password"
-                      required
-                    /> */}
                   </FormControl>
                 </FormItem>
               )}

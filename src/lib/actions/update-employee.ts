@@ -14,7 +14,6 @@ export const updateEmployee = async (
     employeeDetails;
 
   // Update the employee
-
   await prisma.employee.update({
     where: {
       id: employeeId,
@@ -30,50 +29,23 @@ export const updateEmployee = async (
     },
   });
 
-  // Update the employee's assets
-
-  const currentAssets = await prisma.assets.findMany({
+  // Finding and deleting the employee's assets
+  await prisma.assets.deleteMany({
     where: {
       ownerId: employeeId,
     },
   });
 
-  const createOperation = assets.length > currentAssets.length;
+  // Creating ownerId for new assets
+  const assetsWithOwnerId = assets.map((asset: Asset) => ({
+    ...asset,
+    ownerId: employeeId,
+  }));
 
-  if (createOperation) {
-    // Create new assets
-    const assetsToCreate = assets.filter(
-      (asset) =>
-        !currentAssets.some(
-          (currentAsset) => currentAsset.assetId === asset.assetId
-        )
-    );
-
-    const assetsToCreateWithOwnerId = assetsToCreate.map((asset: Asset) => ({
-      ...asset,
-      ownerId: employeeId,
-    }));
-
-    await prisma.assets.createMany({
-      data: assetsToCreateWithOwnerId,
-    });
-  } else {
-    // Delete existing assets
-
-    const assetsToDelete = currentAssets.filter((currentAsset) =>
-      assets.some((asset) => asset.assetId !== currentAsset.assetId)
-    );
-
-    const assetIdsToDelete = assetsToDelete.map((asset) => asset.assetId);
-
-    await prisma.assets.deleteMany({
-      where: {
-        assetId: {
-          in: assetIdsToDelete,
-        },
-      },
-    });
-  }
+  // Creating new assets
+  await prisma.assets.createMany({
+    data: assetsWithOwnerId,
+  });
 
   revalidatePath("/", "page");
 };

@@ -123,7 +123,7 @@ const Home = () => {
         !experienceFilters.length &&
         !roleFilters.length
       ) {
-        // setFilteredEmployees([]);
+        setFilteredEmployees([]);
         setIsFilter(false);
         return;
       }

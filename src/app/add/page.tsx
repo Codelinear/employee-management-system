@@ -174,8 +174,9 @@ export default function AddEmployee() {
       setAssets((prev) => [...prev, { ...values, assetId }]);
 
       setAlertOpen(false);
+      assetsForm.reset();
     },
-    [assets, toast]
+    [assets, toast, assetsForm]
   );
 
   return (

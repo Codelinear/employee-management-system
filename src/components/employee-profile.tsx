@@ -241,7 +241,7 @@ const EmployeeDetails = ({
               </Button>
             </div>
 
-            <div>
+            {/* <div>
               <p className="opacity-70 mb-1 text-sm">Resume</p>
               <Button
                 className={cn(
@@ -252,7 +252,7 @@ const EmployeeDetails = ({
                 <span className="mr-3">Resume</span>
                 <Upload />
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>
