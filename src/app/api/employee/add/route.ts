@@ -14,13 +14,13 @@ export const POST = async (req: NextRequest) => {
       data: employee,
     });
 
-    const assetWithEmployeeId = assets.map((asset: Asset) => ({
+    const assetWithOwnerId = assets.map((asset: Asset) => ({
       ...asset,
       ownerId: newEmployee.id,
     }));
 
     await prisma.assets.createMany({
-      data: assetWithEmployeeId,
+      data: assetWithOwnerId,
     });
 
     // send an email using sendgrid

@@ -12,20 +12,21 @@ import {
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { AddEmployeeInputName, EmployeeDetailsForm } from "@/types";
+import { AssetsForm, EmployeeDetailsForm } from "@/types";
 import { Inter } from "next/font/google";
 import { useForm } from "react-hook-form";
+import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { useCallback, useState } from "react";
-import { addEmployeesInputs } from "@/constants/array";
+import { departments, designations } from "@/constants/array";
 import Plus from "@/components/ui/plus";
+import DeleteIcon from "@/components/ui/delete-icon";
 import { Button } from "@/components/ui/button";
 import Upload from "@/components/ui/upload";
 import { format } from "date-fns";
 import AddEmployeeSuccess from "@/components/add-employee-success";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogFooter,
@@ -51,24 +52,19 @@ import {
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Asset } from "@/types";
+import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
+import CheckBoxChecked from "@/components/ui/checkbox-checked";
+import CheckboxUnchecked from "@/components/ui/checkbox-unchecked";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export default function AddEmployee() {
+  useAuthenticate();
+
   const [assets, setAssets] = useState<Asset[]>([]);
   const [alertOpen, setAlertOpen] = useState(false);
-  const [assetDetail, setAssetDetail] = useState<Asset>({
-    assetId: "",
-    assetName: "",
-    assetType: "",
-    dateAssigned: new Date(),
-  });
   const [useTodayDate, setUseTodayDate] = useState(true);
   const [addEmployeeSuccess, setAddEmployeeSuccess] = useState(false);
-  const [documentsText, setDocumentsText] = useState({
-    panNumber: "",
-    aadhaarNumber: "",
-  });
   const [documentsFile, setDocumentsFile] = useState({
     panPhoto: null,
     aadhaarPhoto: null,
@@ -76,109 +72,110 @@ export default function AddEmployee() {
   });
   const [addEmployeeLoading, setAddEmployeeLoading] = useState(false);
 
-  const userDetailsForm = useForm<EmployeeDetailsForm>({
+  const assetsForm = useForm<AssetsForm>({
     defaultValues: {
-      joiningDate: `${new Date().getDate()} / ${
-        new Date().getMonth() + 1
-      } / ${new Date().getFullYear()}`,
+      assetId: "",
+      assetName: "",
+      assetType: "",
+      dateAssigned: new Date(),
     },
   });
 
+  const userDetailsForm = useForm<EmployeeDetailsForm>({
+    defaultValues: {
+      name: "",
+      employeeId: "",
+      personalEmail: "",
+      companyEmail: "",
+      department: "",
+      phone: undefined,
+      currentRole: "",
+      joiningDate: new Date(),
+      panNumber: "",
+      aadhaarNumber: "",
+    },
+  });
+
+  const { toast } = useToast();
+
   const router = useRouter();
 
-  const onAddEmployeeSubmit = useCallback(async () => {
-    setAddEmployeeLoading(true);
+  const onAddEmployeeSubmit = useCallback(
+    async (values: EmployeeDetailsForm) => {
+      setAddEmployeeLoading(true);
 
-    const values = userDetailsForm.getValues();
+      const employeeId = `${values.name
+        .slice(0, 2)
+        .toUpperCase()}${values.currentRole
+        .slice(0, 1)
+        .toUpperCase()}${values.department
+        .slice(0, 1)
+        .toUpperCase()}${values.phone.toString().slice(8)}${format(
+        values.joiningDate,
+        "dd / MM / yyyy"
+      ).slice(0, 2)}${values.panNumber.slice(0, 2)}${values.aadhaarNumber.slice(
+        0,
+        2
+      )}`;
 
-    const employeeId = `${values.name
-      .slice(0, 2)
-      .toUpperCase()}${values.currentRole.slice(0, 1)}${values.department.slice(
-      0,
-      1
-    )}${values.phone.toString().slice(8)}${values.joiningDate.slice(
-      0,
-      2
-    )}${documentsText.panNumber.slice(0, 2)}${documentsText.aadhaarNumber.slice(
-      0,
-      2
-    )}`;
+      try {
+        await axios.post("/api/employee/add", {
+          assets,
+          employee: {
+            ...values,
+            employeeId,
+            panNumber: values.panNumber,
+            aadhaarNumber: values.aadhaarNumber,
+          },
+        });
 
-    try {
-      await axios.post("/api/employee/add", {
-        assets,
-        employee: {
-          ...values,
-          employeeId,
-          panNumber: documentsText.panNumber,
-          aadhaarNumber: documentsText.aadhaarNumber,
-        },
-      });
-
-      router.push("/");
-    } catch (error) {
-    } finally {
-      setAddEmployeeLoading(false);
-    }
-  }, [assets, documentsText, userDetailsForm, router]);
-
-  const onSubmit = useCallback(async (values: EmployeeDetailsForm) => {
-    //     setAddEmployeeLoading(true);
-    //     try {
-    //       await axios.post("/api/employee/add", {
-    //         ...values,
-    //         assets,
-    //         panNumber: documentsText.panNumber,
-    //         aadhaarNumber: documentsText.aadhaarNumber,
-    //       });
-    //     } catch (error) {
-    //     } finally {
-    //       setAddEmployeeLoading(false);
-    //     }
-  }, []);
-
-  // const documentsFileInputHandler = useCallback(
-  //   (e: React.ChangeEvent<HTMLInputElement>) => {
-  //     if (!e.target.files) return;
-
-  //     const file = e.target.files[0];
-
-  //     const reader = new FileReader();
-  //     reader.readAsDataURL(file);
-  //     reader.onload = (data) => {
-  //       if (!reader.result) {
-  //         return;
-  //       }
-
-  //       setDocumentsFile((prevState) => ({
-  //         ...prevState,
-  //         [e.target.name]: new File([reader.result], file.name, {
-  //           type: file.type,
-  //         }),
-  //       }));
-  //     };
-  //   },
-  //   []
-  // );
-
-  const documentsTextInputHandler = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setDocumentsText((prevState) => ({
-        ...prevState,
-        [e.target.name]: e.target.value,
-      }));
+        setAddEmployeeSuccess(true);
+      } catch (error) {
+      } finally {
+        setAddEmployeeLoading(false);
+      }
     },
-    []
+    [assets]
   );
 
-  const onAssetDetailChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setAssetDetail((prevState) => ({
-        ...prevState,
-        [e.target.name]: e.target.value,
-      }));
+  const onDeleteAsset = useCallback((assetId: string) => {
+    setAssets((prev) => prev.filter((element) => element.assetId !== assetId));
+  }, []);
+
+  const onAssetSubmit = useCallback(
+    (values: AssetsForm) => {
+      const { assetName, assetType } = values;
+
+      if (!assetType || !assetName) {
+        return;
+      }
+
+      const assetIncluded = assets.some(
+        (element) =>
+          element.assetName === assetName && element.assetType === assetType
+      );
+
+      if (assetIncluded) {
+        toast({
+          variant: "destructive",
+          title: "Asset already added",
+        });
+        return;
+      }
+
+      // Generating assetId
+      const nameDigit = assetName.slice(0, 3).toUpperCase();
+      const typeDigit = assetType.slice(0, 3).toUpperCase();
+
+      const assetId = `${nameDigit}${typeDigit}${Date.now()
+        .toString()
+        .slice(7)}`;
+
+      setAssets((prev) => [...prev, { ...values, assetId }]);
+
+      setAlertOpen(false);
     },
-    []
+    [assets, toast]
   );
 
   return (
@@ -193,228 +190,226 @@ export default function AddEmployee() {
       {addEmployeeSuccess ? (
         <AddEmployeeSuccess
           font={inter}
+          userDetailsForm={userDetailsForm}
+          assetsForm={assetsForm}
+          setAssets={setAssets}
           setAddEmployeeSuccess={setAddEmployeeSuccess}
         />
       ) : (
-        <>
-          <main className="px-14 pt-12">
-            <div className="flex items-start">
-              <div className="cursor-pointer">
-                <ImagePrompt />
-              </div>
-
-              <Form {...userDetailsForm}>
-                <form
-                  onSubmit={userDetailsForm.handleSubmit(onSubmit)}
-                  className="grid grid-rows-3 grid-cols-3 ml-[5rem] gap-y-[1.5rem] gap-x-[4.3rem]"
-                >
-                  {addEmployeesInputs.map((element) => (
-                    <FormField
-                      key={uuidv4()}
-                      control={userDetailsForm.control}
-                      name={element.name as AddEmployeeInputName}
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel>{element.label}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type={element.type}
-                              placeholder={element.placeholder}
-                              className={cn(
-                                "placeholder:text-[#00000080] h-auto py-3 px-4",
-                                inter.className
-                              )}
-                              disabled={
-                                element.name === "joiningDate" ||
-                                element.name === "employeeId"
-                              }
-                              required
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </form>
-              </Form>
-            </div>
-            <div className="my-8">
-              <h2
-                className={cn("text-2xl mb-8 font-semibold", inter.className)}
-              >
-                Assets owned
-              </h2>
-
-              <div className="rounded-tl-lg rounded-tr-lg overflow-hidden">
-                <div className="text-[14px] text-[#000000B2] flex items-center">
-                  <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
-                    Slno.
-                  </div>
-                  <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
-                    Asset name
-                  </div>
-                  <div className="py-[0.67rem] w-[12rem]">Asset ID</div>
-                  <div className="py-[0.67rem] w-[11.5rem]">Date assigned</div>
-                  <div className="py-[0.67rem]">Asset type</div>
+        <Form {...userDetailsForm}>
+          <form onSubmit={userDetailsForm.handleSubmit(onAddEmployeeSubmit)}>
+            {" "}
+            <main className="px-14 pt-12">
+              <div className="flex items-start">
+                <div className="cursor-pointer">
+                  <ImagePrompt />
                 </div>
-                <hr />
 
-                {assets.map((element, index) => (
-                  <>
-                    <div className="text-[14px] text-black flex items-center">
-                      <div className="w-[2.9rem] py-[0.67rem] text-[#000000B2] text-center bg-[#FCFCFC]">
-                        {index < 10 ? `0${index + 1}` : `${index + 1}`}
-                      </div>
-                      <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
-                        {element.assetName}
-                      </div>
-                      <div className="py-[0.67rem] w-[12rem]">
-                        {element.assetId}
-                      </div>
-                      <div className="py-[0.67rem] w-[12rem]">
-                        {format(element.dateAssigned, "MM / dd / yyyy")}
-                      </div>
-                      <div className="py-[0.67rem]">{element.assetType}</div>
-                    </div>
-                    <hr />
-                  </>
-                ))}
-              </div>
+                <div className="grid grid-rows-3 grid-cols-3 ml-[5rem] gap-y-[1rem] gap-x-[4.3rem]">
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel>Employee name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Employee name"
+                            className={cn(
+                              "placeholder:text-[#00000080] h-auto py-3 px-4",
+                              inter.className
+                            )}
+                            required
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-              <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    type="button"
-                    className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-4 py-3 mt-4 h-auto rounded-lg"
-                  >
-                    <Plus />
-                    <span className="ml-2">Assign Asset</span>
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="max-w-[60rem] p-10">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-2xl">
-                      Assign Asset
-                    </AlertDialogTitle>
-                  </AlertDialogHeader>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="employeeId"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel>Employee ID</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Auto generated"
+                            className={cn(
+                              "placeholder:text-[#00000080] h-auto py-3 px-4",
+                              inter.className
+                            )}
+                            disabled
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                      setAssets((prev) => [...prev, assetDetail]);
-                      if (!assetDetail.dateAssigned) {
-                        setAlertOpen(true);
-                      } else {
-                        setAlertOpen(false);
-                      }
-                    }}
-                  >
-                    <div className="flex flex-wrap items-center mt-6 gap-y-4 gap-x-16">
-                      <div>
-                        <p className="opacity-70 mb-2 text-sm">Asset name</p>
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="companyEmail"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel>Company Email Address</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="Email Address"
+                            className={cn(
+                              "placeholder:text-[#00000080] h-auto py-3 px-4",
+                              inter.className
+                            )}
+                            required
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="personalEmail"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel>Personal Email Address</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="Email Address"
+                            className={cn(
+                              "placeholder:text-[#00000080] h-auto py-3 px-4",
+                              inter.className
+                            )}
+                            required
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel>Department</FormLabel>
                         <Select
-                          value={assetDetail.assetName}
-                          onValueChange={(value) =>
-                            setAssetDetail((prevState) => ({
-                              ...prevState,
-                              assetName: value,
-                            }))
-                          }
-                          name="assetName"
-                          required
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
                         >
-                          <SelectTrigger className="w-60 h-12 border border-[#00000033]">
-                            <SelectValue placeholder="Asset name" />
-                          </SelectTrigger>
+                          <FormControl>
+                            <SelectTrigger className="h-auto py-3 px-4 border border-[#00000033]">
+                              <SelectValue placeholder="Department" />
+                            </SelectTrigger>
+                          </FormControl>
                           <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="laptop">Laptop</SelectItem>
-                              <SelectItem value="mobile">Mobile</SelectItem>
-                              <SelectItem value="stickers">Stickers</SelectItem>
-                              <SelectItem value="bag">Bag</SelectItem>
-                            </SelectGroup>
+                            {departments.map((element) => (
+                              <SelectItem
+                                key={element.id}
+                                value={element.department}
+                                className="cursor-pointer"
+                              >
+                                {element.department}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="asset-id"
-                          className="opacity-70 text-sm"
-                        >
-                          Asset ID
-                        </label>
-                        <Input
-                          id="asset-id"
-                          name="assetId"
-                          onChange={onAssetDetailChange}
-                          value={assetDetail.assetId}
-                          className="placeholder:text-[#00000080] w-60 h-12 border border-[#00000033] mt-1"
-                          placeholder="ISDH98377212"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="asset-type"
-                          className="opacity-70 text-sm"
-                        >
-                          Asset type
-                        </label>
-                        <Input
-                          id="asset-type"
-                          name="assetType"
-                          value={assetDetail.assetType}
-                          onChange={onAssetDetailChange}
-                          className="placeholder:text-[#00000080] w-60 h-12 border border-[#00000033] mt-1"
-                          placeholder="Asset type"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="asset-date-assigned"
-                          className="opacity-70 text-sm block"
-                        >
-                          Date Assigned
-                        </label>
+                      </FormItem>
+                    )}
+                  />
 
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel>Phone number</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="tel"
+                            maxLength={10}
+                            placeholder="Phone number"
+                            className={cn(
+                              "placeholder:text-[#00000080] h-auto py-3 px-4",
+                              inter.className
+                            )}
+                            required
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="currentRole"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current role</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-auto py-3 px-4 border border-[#00000033]">
+                              <SelectValue placeholder="Current role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {designations.map((element) => (
+                              <SelectItem
+                                key={uuidv4()}
+                                value={element}
+                                className="cursor-pointer"
+                              >
+                                {element}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={userDetailsForm.control}
+                    name="joiningDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Joining date</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              disabled={useTodayDate}
-                              className={cn(
-                                "w-60 mt-2 pl-5 flex items-center justify-between",
-                                !assetDetail.dateAssigned &&
-                                  "text-muted-foreground",
-                                inter.className
-                              )}
-                            >
-                              {assetDetail.dateAssigned ? (
-                                format(
-                                  assetDetail.dateAssigned,
-                                  "dd / MM / yyyy"
-                                )
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon />
-                            </Button>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-60 mt-2 h-auto py-3 px-4 flex items-center justify-between",
+                                  inter.className
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "dd / MM / yyyy")
+                                ) : (
+                                  <span className="opacity-70">
+                                    Pick a date
+                                  </span>
+                                )}
+                                <CalendarIcon />
+                              </Button>
+                            </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
-                              selected={assetDetail.dateAssigned}
+                              selected={field.value}
+                              onSelect={field.onChange}
                               className={inter.className}
-                              onSelect={(date) => {
-                                if (date) {
-                                  setAssetDetail((prevState) => ({
-                                    ...prevState,
-                                    dateAssigned: date,
-                                  }));
-                                }
-                              }}
                               disabled={(date) =>
                                 date > new Date() ||
                                 date < new Date("1900-01-01")
@@ -423,148 +418,373 @@ export default function AddEmployee() {
                             />
                           </PopoverContent>
                         </Popover>
-                      </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              <div className="my-8">
+                <h2
+                  className={cn("text-2xl mb-8 font-semibold", inter.className)}
+                >
+                  Assets owned
+                </h2>
+
+                <div className="rounded-tl-lg rounded-tr-lg overflow-hidden">
+                  <div className="text-[14px] text-[#000000B2] flex items-center">
+                    <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
+                      Slno.
                     </div>
-
-                    <div className="mt-1 mb-8 flex items-center">
-                      <Checkbox
-                        id="use-today-date-checkbox"
-                        checked={useTodayDate}
-                        onCheckedChange={(value) =>
-                          setUseTodayDate(value as boolean)
-                        }
-                        className="data-[state=checked]:bg-[#182CE3]"
-                      />
-                      <label
-                        htmlFor="use-today-date-checkbox"
-                        className="text-sm ml-1.5 cursor-pointer"
-                      >
-                        Use today&apos;s date
-                      </label>
+                    <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
+                      Asset name
                     </div>
-
-                    <AlertDialogFooter className="sm:justify-start">
-                      <Button
-                        type="submit"
-                        className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"
-                      >
-                        Assign Asset
-                      </Button>
-                      <AlertDialogCancel
-                        onClick={() =>
-                          setAssetDetail({
-                            assetId: "",
-                            assetName: "",
-                            assetType: "",
-                            dateAssigned: new Date(),
-                          })
-                        }
-                        className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent"
-                      >
-                        Cancel
-                      </AlertDialogCancel>
-                    </AlertDialogFooter>
-                  </form>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-
-            <div className="mb-12">
-              <h2 className={cn("text-2xl font-medium mb-5", inter.className)}>
-                Employee Documents
-              </h2>
-
-              <div className="flex items-center">
-                <div className="flex items-center">
-                  <div>
-                    <label htmlFor="pan-number" className="text-sm block mb-1">
-                      PAN Card Number
-                    </label>
-                    <input
-                      className="placeholder:text-[#00000080] border border-[#00000033] rounded-md outline-none 3 py-3 px-4 text-base"
-                      value={documentsText.panNumber}
-                      onChange={documentsTextInputHandler}
-                      type="text"
-                      name="panNumber"
-                      id="pan-number"
-                      placeholder="Enter PAN no."
-                      required
-                    />
+                    <div className="py-[0.67rem] w-[12rem]">Asset ID</div>
+                    <div className="py-[0.67rem] w-[11.5rem]">
+                      Date assigned
+                    </div>
+                    <div className="py-[0.67rem]">Asset type</div>
                   </div>
-                  <div className="ml-3">
-                    <label htmlFor="pan-photo" className="text-sm mb-1">
-                      PAN Card Photo. 2 MB
-                    </label>
+                  <hr />
 
-                    <Button
-                      type="button"
-                      className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4"
-                    >
-                      <span className="mr-4">Upload photo</span>
-                      <Upload />
-                    </Button>
-                  </div>{" "}
+                  {assets.map((element, index) => (
+                    <>
+                      <div className="text-[14px] text-black flex items-center">
+                        <div className="w-[2.9rem] py-[0.67rem] text-[#000000B2] text-center bg-[#FCFCFC]">
+                          {index < 10 ? `0${index + 1}` : `${index + 1}`}
+                        </div>
+                        <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
+                          {element.assetName}
+                        </div>
+                        <div className="py-[0.67rem] w-[12rem]">
+                          {element.assetId}
+                        </div>
+                        <div className="py-[0.67rem] w-[12rem]">
+                          {format(element.dateAssigned, "MM / dd / yyyy")}
+                        </div>
+                        <div className="py-[0.67rem] w-[13.5rem]">
+                          {element.assetType}
+                        </div>
+                        <div
+                          className={`cursor-pointer`}
+                          onClick={() => onDeleteAsset(element.assetId)}
+                        >
+                          <DeleteIcon />
+                        </div>
+                      </div>
+                      <hr />
+                    </>
+                  ))}
                 </div>
 
-                <div className="flex items-center mx-8">
-                  <div>
-                    <label
-                      htmlFor="aadhaar-number"
-                      className="text-sm block mb-1"
+                <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-4 py-3 mt-4 h-auto rounded-lg"
                     >
-                      Aadhaar Card
-                    </label>
-                    <input
-                      className="placeholder:text-[#00000080] border border-[#00000033] rounded-md outline-none p-3"
-                      value={documentsText.aadhaarNumber}
-                      onChange={documentsTextInputHandler}
-                      type="text"
-                      name="aadhaarNumber"
-                      id="aadhaar-number"
-                      placeholder="Enter Aadhaar no."
-                      required
+                      <Plus />
+                      <span className="ml-2">Assign Asset</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="max-w-[60rem] p-10">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-2xl">
+                        Assign Asset
+                      </AlertDialogTitle>
+                    </AlertDialogHeader>
+
+                    <Form {...assetsForm}>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          assetsForm.handleSubmit(onAssetSubmit)();
+                        }}
+                      >
+                        <div className="flex flex-wrap items-center mt-6 gap-y-4 gap-x-16">
+                          <FormField
+                            control={assetsForm.control}
+                            name="assetName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="opacity-70 mb-2 text-sm">
+                                  Asset name
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="w-60 h-12 border border-[#00000033]">
+                                      <SelectValue placeholder="Asset name" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectGroup>
+                                      <SelectItem value="Laptop">
+                                        Laptop
+                                      </SelectItem>
+                                      <SelectItem value="Mobile">
+                                        Mobile
+                                      </SelectItem>
+                                      <SelectItem value="Stickers">
+                                        Stickers
+                                      </SelectItem>
+                                      <SelectItem value="Bag">Bag</SelectItem>
+                                    </SelectGroup>
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={assetsForm.control}
+                            name="assetId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="opacity-70 text-sm">
+                                  Asset ID
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    className="placeholder:text-[#00000080] w-60 h-12 border border-[#00000033] mt-1"
+                                    placeholder="Auto generated"
+                                    disabled
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={assetsForm.control}
+                            name="assetType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="opacity-70 mb-2 text-sm">
+                                  Asset type
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="w-60 h-12 border border-[#00000033]">
+                                      <SelectValue placeholder="Asset type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectGroup>
+                                      <SelectItem value="Technical">
+                                        Technical
+                                      </SelectItem>
+                                      <SelectItem value="Physical">
+                                        Physical
+                                      </SelectItem>
+                                    </SelectGroup>
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={assetsForm.control}
+                            name="dateAssigned"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                <FormLabel className="opacity-70 text-sm block">
+                                  Date Assigned
+                                </FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant={"outline"}
+                                        disabled={useTodayDate}
+                                        className={cn(
+                                          "w-60 mt-2 pl-5 flex items-center justify-between",
+                                          inter.className
+                                        )}
+                                      >
+                                        {field.value ? (
+                                          format(field.value, "dd / MM / yyyy")
+                                        ) : (
+                                          <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                  >
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value}
+                                      onSelect={field.onChange}
+                                      className={inter.className}
+                                      disabled={(date) =>
+                                        date > new Date() ||
+                                        date < new Date("1900-01-01")
+                                      }
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="mt-1 mb-8 flex items-center">
+                          {useTodayDate ? (
+                            <div onClick={() => setUseTodayDate(false)}>
+                              <CheckBoxChecked />
+                            </div>
+                          ) : (
+                            <div onClick={() => setUseTodayDate(true)}>
+                              <CheckboxUnchecked />
+                            </div>
+                          )}
+                          <p
+                            onClick={() => setUseTodayDate((prev) => !prev)}
+                            className="text-sm ml-1.5 cursor-pointer"
+                          >
+                            Use today&apos;s date
+                          </p>
+                        </div>
+
+                        <AlertDialogFooter className="sm:justify-start">
+                          <Button
+                            type="submit"
+                            className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"
+                          >
+                            Assign Asset
+                          </Button>
+                          <AlertDialogCancel
+                            onClick={() => assetsForm.reset()}
+                            className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent"
+                          >
+                            Cancel
+                          </AlertDialogCancel>
+                        </AlertDialogFooter>
+                      </form>
+                    </Form>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+
+              <div className="mb-12">
+                <h2
+                  className={cn("text-2xl font-semibold mb-5", inter.className)}
+                >
+                  Employee Documents
+                </h2>
+
+                <div className="flex items-center">
+                  <div className="flex items-center">
+                    <FormField
+                      control={userDetailsForm.control}
+                      name="panNumber"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-sm">
+                            PAN Card Number
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter PAN no."
+                              minLength={10}
+                              maxLength={10}
+                              className="placeholder:text-[#00000080] border border-[#00000033] rounded-md outline-none py-3 px-4 text-base h-auto"
+                              required
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
                     />
+                    {/* <div className="ml-3">
+                      <label htmlFor="pan-photo" className="text-sm mb-1">
+                        PAN Card Photo. 2 MB
+                      </label>
+
+                      <Button
+                        type="button"
+                        className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4"
+                      >
+                        <span className="mr-4">Upload photo</span>
+                        <Upload />
+                      </Button>
+                    </div>{" "} */}
                   </div>
-                  <div className="ml-3">
+
+                  <div className="flex items-center mx-8">
+                    <FormField
+                      control={userDetailsForm.control}
+                      name="aadhaarNumber"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-sm">
+                            Aadhaar Card
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter Aadhaar no."
+                              minLength={12}
+                              maxLength={12}
+                              className="placeholder:text-[#00000080] border border-[#00000033] rounded-md outline-none py-3 px-4 text-base h-auto"
+                              required
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    {/* <div className="ml-3">
+                      <label htmlFor="pan-photo" className="text-sm mb-1">
+                        Aadhaar Card Photo. 2 MB
+                      </label>
+
+                      <Button className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4">
+                        <span className="mr-4">Upload photo</span>
+                        <Upload />
+                      </Button>
+                    </div>{" "} */}
+                  </div>
+                  {/* <div>
                     <label htmlFor="pan-photo" className="text-sm mb-1">
-                      Aadhaar Card Photo. 2 MB
+                      Resume. 2 MB
                     </label>
 
                     <Button className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4">
                       <span className="mr-4">Upload photo</span>
                       <Upload />
                     </Button>
-                  </div>{" "}
-                </div>
-                <div>
-                  <label htmlFor="pan-photo" className="text-sm mb-1">
-                    Resume. 2 MB
-                  </label>
-
-                  <Button className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4">
-                    <span className="mr-4">Upload photo</span>
-                    <Upload />
-                  </Button>
+                  </div> */}
                 </div>
               </div>
-            </div>
-          </main>
-
-          <footer className="flex px-14 items-center justify-start my-10">
-            <Button
-              onClick={onAddEmployeeSubmit}
-              className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"
-            >
-              Add Employee
-            </Button>
-            <Button
-              type="button"
-              className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent ml-3"
-            >
-              Close
-            </Button>
-          </footer>
-        </>
+            </main>
+            <footer className="flex px-14 items-center justify-start my-10">
+              <Button
+                type="submit"
+                className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"
+              >
+                Add Employee
+              </Button>
+              <Button
+                type="button"
+                onClick={() => router.push("/")}
+                className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent ml-3"
+              >
+                Close
+              </Button>
+            </footer>
+          </form>
+        </Form>
       )}
     </>
   );

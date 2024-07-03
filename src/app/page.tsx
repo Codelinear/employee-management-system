@@ -1,14 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import React, { useCallback, useEffect, useState } from "react";
-// import { employees } from "@/constants/array";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
 import { Employee } from "@prisma/client";
 import { useStore } from "@/store";
-import { format } from "date-fns";
-import { useRouter } from "next/navigation";
 import SearchIcon from "@/components/ui/search";
 import Funnel from "@/components/ui/funnel";
 import ArrowUp from "@/components/ui/arrow-up";
@@ -17,19 +19,45 @@ import { cn } from "@/lib/utils";
 import { Inter } from "next/font/google";
 import { getEmployees } from "@/lib/actions/get-employees";
 import EmployeeDetails from "@/components/employee-details";
+import UpdateEmployee from "@/components/update-employee";
+import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
+import SearchNotFound from "@/components/search-not-found";
+import ListLoading from "@/components/list-loading";
+import FilterOverlay from "@/components/filter-overlay";
+import { Filters } from "@/types";
+import { filterByExperience } from "@/lib/functions";
+import Cross from "@/components/ui/cross";
+import ArrowDown from "@/components/ui/arrow-down";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 const Home = () => {
-  const [employeeName, setEmployeeName] = useState("");
+  useAuthenticate();
+
+  const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFilter, setIsFilter] = useState(false);
   const [isViewDetails, setIsViewDetails] = useState(false);
+  const [isUpdateEmployee, setIsUpdateEmployee] = useState(false);
+  const [searchNotFound, setSearchNotFound] = useState(false);
+  const [isRelievedChecked, setIsRelievedChecked] = useState(false);
+
+  // Employee list states
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [searchedEmployees, setSearchedEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+
+  // Sorting states
+  const [isDateSorting, setIsDateSorting] = useState(false);
+  const [dateSorting, setDateSorting] = useState<"asc" | "desc">("desc");
+  const [alphabetSorting, setAlphabetSorting] = useState<"asc" | "desc">(
+    "desc"
+  );
+  const [isAlphabeticalSorting, setIsAlphabeticalSorting] = useState(false);
+
+  const employeesListRef = useRef<ReactNode | null>(null);
 
   const { setCurrentEmployee } = useStore();
-
-  const router = useRouter();
 
   useEffect(() => {
     const initialLoad = async () => {
@@ -45,23 +73,85 @@ const Home = () => {
     initialLoad();
   }, []);
 
-  const onSubmit = useCallback(
+  const onSearch = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      try {
-        setIsLoading(true);
 
-        const res = await axios.get(
-          `/api/employee/search?employeeName=${employeeName}`
+      if (searchValue === "") {
+        setSearchedEmployees([]);
+        return;
+      }
+
+      const searchedEmployees = employees.filter(
+        (employee) =>
+          employee.name.toLowerCase() === searchValue.toLowerCase() ||
+          employee.employeeId.toLowerCase() === searchValue.toLowerCase()
+      );
+
+      if (!searchedEmployees.length) {
+        setSearchNotFound(true);
+      }
+
+      setSearchedEmployees(searchedEmployees);
+      setFilteredEmployees([]);
+    },
+    [searchValue, employees]
+  );
+
+  const onApplyFilters = useCallback(
+    (filters: Filters) => {
+      const { departmentFilters, experienceFilters, roleFilters } = filters;
+
+      if (isRelievedChecked) {
+        const relievedEmployees = employees.filter(
+          (employee) => employee.relieved
         );
 
-        // setEmployees(res.data.employees);
-      } catch (error) {
-      } finally {
-        setIsLoading(false);
+        setFilteredEmployees(relievedEmployees);
+        setSearchedEmployees([]);
+        setIsFilter(false);
+        return;
       }
+
+      if (
+        !departmentFilters.length &&
+        !experienceFilters.length &&
+        !roleFilters.length
+      ) {
+        // setFilteredEmployees([]);
+        setIsFilter(false);
+        return;
+      }
+
+      if (departmentFilters.length) {
+        const departmentFilteredEmployees = employees.filter((employee) =>
+          departmentFilters.includes(employee.department)
+        );
+
+        setFilteredEmployees(departmentFilteredEmployees);
+      }
+
+      if (experienceFilters.length) {
+        const experienceFilteredEmployees = filterByExperience(
+          experienceFilters,
+          employees
+        );
+
+        setFilteredEmployees(experienceFilteredEmployees);
+      }
+
+      if (roleFilters.length) {
+        const roleFilteredEmployees = employees.filter((employee) =>
+          roleFilters.includes(employee.currentRole)
+        );
+
+        setFilteredEmployees(roleFilteredEmployees);
+      }
+
+      setSearchedEmployees([]);
+      setIsFilter(false);
     },
-    [setIsLoading, employeeName]
+    [employees, isRelievedChecked]
   );
 
   const viewDetails = useCallback(
@@ -72,103 +162,159 @@ const Home = () => {
     [setCurrentEmployee, setIsViewDetails]
   );
 
-  return isViewDetails ? (
-    <EmployeeDetails setIsViewDetails={setIsViewDetails} />
-  ) : (
-    <div>
-      {isFilter && (
-        <div
-          className="h-screen w-full absolute bg-transparent z-10"
-          onClick={() => setIsFilter(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-[#F7F7F7] h-80 shadow-lg mx-14 mt-52 p-5 rounded-lg"
-          >
-            <div>
-              <p className="text-[12px]">Filter by Department</p>
-              <div className="flex w-1/3 border"></div>
-            </div>
-            {/* <Separator /> */}
-            <div></div>
-            {/* <Separator /> */}
-            <div></div>
+  const onDateSort = useCallback(
+    (sortType: string) => {
+      if (sortType === "asc") {
+        if (filteredEmployees.length) {
+          filteredEmployees.sort(
+            (a, b) =>
+              new Date(a.joiningDate).getTime() -
+              new Date(b.joiningDate).getTime()
+          );
+        } else if (searchedEmployees.length) {
+          searchedEmployees.sort(
+            (a, b) =>
+              new Date(a.joiningDate).getTime() -
+              new Date(b.joiningDate).getTime()
+          );
+        } else {
+          employees.sort(
+            (a, b) =>
+              new Date(a.joiningDate).getTime() -
+              new Date(b.joiningDate).getTime()
+          );
+        }
+      } else {
+        if (filteredEmployees.length) {
+          filteredEmployees.sort(
+            (a, b) =>
+              new Date(b.joiningDate).getTime() -
+              new Date(a.joiningDate).getTime()
+          );
+        } else if (searchedEmployees.length) {
+          searchedEmployees.sort(
+            (a, b) =>
+              new Date(b.joiningDate).getTime() -
+              new Date(a.joiningDate).getTime()
+          );
+        } else {
+          employees.sort(
+            (a, b) =>
+              new Date(b.joiningDate).getTime() -
+              new Date(a.joiningDate).getTime()
+          );
+        }
+      }
+    },
+    [employees, filteredEmployees, searchedEmployees]
+  );
+
+  const onAplhaSort = useCallback(
+    (sortType: string) => {
+      if (sortType === "asc") {
+        if (filteredEmployees.length) {
+          filteredEmployees.sort((a, b) => {
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+            return 0;
+          });
+        } else if (searchedEmployees.length) {
+          searchedEmployees.sort((a, b) => {
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+            return 0;
+          });
+        } else {
+          employees.sort((a, b) => {
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+            return 0;
+          });
+        }
+      } else {
+        if (filteredEmployees.length) {
+          filteredEmployees.sort((a, b) => {
+            if (a.name < b.name) return 1;
+            if (a.name > b.name) return -1;
+            return 0;
+          });
+        } else if (searchedEmployees.length) {
+          searchedEmployees.sort((a, b) => {
+            if (a.name < b.name) return 1;
+            if (a.name > b.name) return -1;
+            return 0;
+          });
+        } else {
+          employees.sort((a, b) => {
+            if (a.name < b.name) return 1;
+            if (a.name > b.name) return -1;
+            return 0;
+          });
+        }
+      }
+    },
+    [employees, filteredEmployees, searchedEmployees]
+  );
+
+  // const onSortRemove = useCallback(() => {
+  //   if (filteredEmployees.length) {
+  //     filteredEmployees.sort((a, b) => a.originalIndex - b.originalIndex);
+
+  //     filteredEmployees.forEach((item) => delete item.originalIndex);
+  //   } else if (searchedEmployees.length) {
+  //     searchedEmployees.sort((a, b) => a.originalIndex - b.originalIndex);
+
+  //     searchedEmployees.forEach((item) => delete item.originalIndex);
+  //   } else {
+  //     employees.sort((a, b) => a.originalIndex - b.originalIndex);
+
+  //     employees.forEach((item) => delete item.originalIndex);
+  //   }
+  // }, [filteredEmployees, employees, searchedEmployees]);
+
+  if (searchNotFound) {
+    employeesListRef.current = (
+      <SearchNotFound font={inter} setSearchNotFound={setSearchNotFound} />
+    );
+  } else if (employees.length || searchedEmployees.length) {
+    let employeesList;
+
+    if (searchedEmployees.length) {
+      employeesList = searchedEmployees;
+    } else if (filteredEmployees.length) {
+      employeesList = filteredEmployees;
+    } else {
+      employeesList = employees;
+    }
+
+    employeesListRef.current = (
+      <section className="rounded-lg overflow-y-scroll max-h-[63.5vh] [scrollbar-width:thin]">
+        <div className="text-[13px] text-[#000000B2] flex items-center">
+          <div className="w-[2.9rem] text-[12px] py-[0.67rem] text-center bg-[#FCFCFC]">
+            Slno.
           </div>
+          <div className="w-[18.7rem] pl-[1rem] py-[0.67rem]">
+            Employee name
+          </div>
+          <div className="py-[0.67rem] w-[10.5rem]">Employee ID</div>
+          <div className="w-[17.5rem] py-[0.67rem]">Email Address</div>
+          <div className="py-[0.67rem]">Department</div>
         </div>
-      )}
+        <hr />
 
-      <Header />
-      <hr />
-      <main className="px-14">
-        <div className="w-full flex items-center bg-[#F7F7F7] rounded-lg px-7 py-[0.95rem] my-[1.57rem]">
-          {" "}
-          <form
-            onSubmit={onSubmit}
-            className="w-[26rem] flex rounded-md border border-[#00000033] bg-white items-center py-[0.78rem] px-5"
-          >
-            <SearchIcon />
-            <input
-              className={cn(
-                "w-full text-[14px] outline-none placeholder:text-[#00000080] border-none ml-4 bg-transparent",
-                inter.className
-              )}
-              type="search"
-              value={employeeName}
-              onChange={(e) => setEmployeeName(e.target.value)}
-              placeholder="Search Employee name, ID"
-            />
-          </form>
-          <Button
-            type="button"
-            onClick={() => setIsFilter(true)}
-            className={cn(
-              "flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[11px] px-3 ml-12",
-              inter.className
-            )}
-          >
-            <Funnel />
-            <span className="ml-2">Filter by</span>
-          </Button>
-          <span className="ml-5 mr-3 text-[#00000099] text-[12px]">
-            Sort by:
-          </span>
-          <Button
-            type="button"
-            className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2"
-          >
-            <ArrowUp />
-            <span className="ml-2">Alphabetical</span>
-          </Button>
-          <Button
-            type="button"
-            className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2 ml-3"
-          >
-            <ArrowUp />
-            <span className="ml-2">Date added</span>
-          </Button>
-        </div>
-
-        {employees.length ? (
-          <section className="rounded-lg overflow-y-scroll h-[63.5vh] [scrollbar-width:thin]">
-            <div className="text-[13px] text-[#000000B2] flex items-center">
-              <div className="w-[2.9rem] text-[12px] py-[0.67rem] text-center bg-[#FCFCFC]">
-                Slno.
-              </div>
-              <div className="w-[18.7rem] pl-[1rem] py-[0.67rem]">
-                Employee name
-              </div>
-              <div className="py-[0.67rem] w-[10.5rem]">Employee ID</div>
-              <div className="w-[17.5rem] py-[0.67rem]">Email Address</div>
-              <div className="py-[0.67rem]">Department</div>
-            </div>
-            <hr />
-
-            {employees.map((element, index) => (
+        {isLoading
+          ? Array.from({ length: 10 }).map((_, index) => (
+              <ListLoading key={uuidv4()} index={index} />
+            ))
+          : employeesList.map((element, index) => (
               <>
                 <div
                   key={uuidv4()}
                   className="text-base text-black flex items-center"
                 >
+                  {element.relieved && (
+                    <div className="absolute left-[83%] w-4 h-4 rounded-full bg-[#D42B2B] animate-pulse"></div>
+                  )}
                   <div className="w-[2.9rem] text-[#000000B2] py-[1.17rem] text-center bg-[#FCFCFC] text-[12px]">
                     {index < 10 ? `0${index + 1}` : `${index + 1}`}
                   </div>
@@ -195,143 +341,223 @@ const Home = () => {
                 <hr />
               </>
             ))}
-          </section>
-        ) : (
-          <section className="flex items-center justify-center h-[63.5vh]">
-            {" "}
-            <h1
+      </section>
+    );
+  } else if (!employees.length && !searchedEmployees.length) {
+    employeesListRef.current = (
+      <section className="flex items-center justify-center h-[63.5vh]">
+        {" "}
+        <h1
+          className={cn(
+            "text-5xl text-[#000000B2] text-center font-medium",
+            inter.className
+          )}
+        >
+          Add an employee
+        </h1>
+      </section>
+    );
+  }
+
+  if (isUpdateEmployee) {
+    return (
+      <UpdateEmployee
+        setIsViewDetails={setIsViewDetails}
+        setIsUpdateEmployee={setIsUpdateEmployee}
+      />
+    );
+  }
+
+  if (isViewDetails) {
+    return (
+      <EmployeeDetails
+        setIsViewDetails={setIsViewDetails}
+        setIsUpdateEmployee={setIsUpdateEmployee}
+      />
+    );
+  }
+
+  return (
+    <div>
+      {isFilter && (
+        <FilterOverlay
+          isRelievedChecked={isRelievedChecked}
+          setIsRelievedChecked={setIsRelievedChecked}
+          setFilteredEmployees={setFilteredEmployees}
+          onApplyFilters={onApplyFilters}
+          setIsFilter={setIsFilter}
+        />
+      )}
+
+      <Header />
+      <hr />
+      <main className="px-14">
+        <div className="w-full flex items-center bg-[#F7F7F7] rounded-lg px-7 py-[0.95rem] my-[1.57rem]">
+          {" "}
+          <form
+            onSubmit={onSearch}
+            className="w-[26rem] flex rounded-md border border-[#00000033] bg-white items-center py-[0.78rem] px-5"
+          >
+            <SearchIcon />
+            <input
               className={cn(
-                "text-5xl text-[#000000B2] text-center font-medium",
+                "w-full text-[14px] outline-none placeholder:text-[#00000080] border-none ml-4 bg-transparent",
                 inter.className
               )}
+              type="search"
+              value={searchValue}
+              onChange={(e) => {
+                if (e.target.value === "") {
+                  setSearchNotFound(false);
+                  setSearchedEmployees([]);
+                }
+
+                setSearchValue(e.target.value);
+              }}
+              placeholder="Search Employee name, ID"
+            />
+          </form>
+          <Button
+            type="button"
+            onClick={() => setIsFilter(true)}
+            className={cn(
+              "flex items-center border text-black border-black bg-transparent hover:bg-transparent cursor-pointer rounded-lg text-[11px] px-3 ml-12",
+              inter.className
+            )}
+          >
+            <Funnel />
+            <span className="ml-2">Filter by</span>
+          </Button>
+          <span className="ml-5 mr-3 text-[#00000099] text-[12px]">
+            Sort by:
+          </span>
+          {!isAlphabeticalSorting ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setIsAlphabeticalSorting(true);
+                onAplhaSort("asc");
+                setIsDateSorting(false);
+              }}
+              className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2"
             >
-              Add an employee
-            </h1>
-          </section>
-        )}
+              <ArrowUp />
+              <span className="ml-2">Alphabetical</span>
+            </Button>
+          ) : alphabetSorting === "asc" ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setAlphabetSorting("desc");
+                onAplhaSort("desc");
+              }}
+              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
+            >
+              <ArrowDown />
+              <span className="ml-2">Alphabetical</span>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsAlphabeticalSorting(false);
+                  setAlphabetSorting("desc");
+                  // onSortRemove();
+                }}
+                className="pr-2 pl-4"
+              >
+                <Cross stroke="#000000" />
+              </div>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => {
+                setAlphabetSorting("asc");
+                onAplhaSort("asc");
+              }}
+              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
+            >
+              <ArrowUp />
+              <span className="ml-2">Alphabetical</span>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsAlphabeticalSorting(false);
+                  setAlphabetSorting("desc");
+                  // onSortRemove();
+                }}
+                className="pr-2 pl-4"
+              >
+                <Cross stroke="#000000" />
+              </div>
+            </Button>
+          )}
+          {/* ------------------------------------------------------------------------------ */}
+          {!isDateSorting ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setIsAlphabeticalSorting(false);
+                setIsDateSorting(true);
+                onDateSort("asc");
+              }}
+              className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2 ml-3"
+            >
+              <ArrowUp />
+              <span className="ml-2">Date added</span>
+            </Button>
+          ) : dateSorting === "asc" ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setDateSorting("desc");
+                onDateSort("desc");
+              }}
+              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
+            >
+              <ArrowDown />
+              <span className="ml-2">Date added</span>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDateSorting(false);
+                  setDateSorting("desc");
+                  // onSortRemove();
+                }}
+                className="pr-2 pl-4"
+              >
+                <Cross stroke="#000000" />
+              </div>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => {
+                setDateSorting("asc");
+                onDateSort("asc");
+              }}
+              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
+            >
+              <ArrowUp />
+              <span className="ml-2">Date added</span>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDateSorting(false);
+                  setDateSorting("desc");
+                  // onSortRemove();
+                }}
+                className="pr-2 pl-4"
+              >
+                <Cross stroke="#000000" />
+              </div>
+            </Button>
+          )}
+        </div>
+
+        {employeesListRef.current}
       </main>
     </div>
   );
-
-  // <section className="w-[80%] mx-auto py-10">
-  // <form onSubmit={onSubmit} className="w-full">
-  //   <input
-  //     className="w-full outline-none border-2 p-2 mb-5 text-xl rounded-lg"
-  //     type="search"
-  //     value={employeeName}
-  //     onChange={(e) => setEmployeeName(e.target.value)}
-  //     placeholder="Enter the employee name"
-  //   />
-  // </form>
-  //   {isLoading ? (
-  //     <h2 className="text-4xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-  //       Loading...
-  //     </h2>
-  //   ) : (
-  //     <div className="w-full h-[88%]">
-  //       {employees?.length === 0 ? (
-  //         <div className="text-center h-full flex justify-center flex-col my-5">
-  //           <p className="text-5xl font-semibold text-indigo-600">404</p>
-  //           <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-  //             User not found
-  //           </h1>
-  //           <p className="mt-6 text-base leading-7 text-gray-600">
-  //             Sorry, we couldn&apos;t find the user.
-  //           </p>
-  //         </div>
-  //       ) : (
-  //         employees?.map((element) => (
-  //           <div
-  //             key={uuidv4()}
-  //             className="flex items-center my-3 p-3 rounded-lg transition duration-250"
-  //           >
-  //             <div className="ml-3">
-  //               <h3 className="text-xl">
-  //                 {element.firstName} {element.lastName}
-  //               </h3>
-  //             </div>
-  //             <Dialog>
-  //               <DialogTrigger asChild>
-  //                 <Button className="ml-auto">View details</Button>
-  //               </DialogTrigger>
-  //               <DialogContent className="max-w-3xl">
-  //                 <DialogHeader>
-  //                   <DialogTitle className="text-2xl text-center pt-5">
-  //                     Here are the details of {element.firstName}{" "}
-  //                     {element.lastName}
-  //                   </DialogTitle>
-  //                 </DialogHeader>
-
-  //                 <main className="my-5 w-4/5 mx-auto">
-  //                   <div className="flex justify-between items-center my-3">
-  //                     <strong>Name</strong>
-  //                     <p>
-  //                       {element.firstName} {element.lastName}
-  //                     </p>
-  //                   </div>
-  //                   <div className="flex justify-between items-center my-3">
-  //                     <strong>Assigned email</strong>
-  //                     <p>{element.assignedEmail}</p>
-  //                   </div>
-  //                   <div className="flex justify-between items-center my-3">
-  //                     <strong>Phone</strong>
-  //                     <p>{element.phone}</p>
-  //                   </div>
-  //                   <div className="flex justify-between items-center my-3">
-  //                     <strong>Date of birth</strong>
-  //                     <p>{format(element.dob, "PPP")}</p>
-  //                   </div>
-  //                   <div className="flex justify-between items-center my-3">
-  //                     <strong>Salary</strong>
-  //                     <p>{element.salary}/Month</p>
-  //                   </div>
-  //                   <div className="flex justify-between items-center my-3">
-  //                     <strong>Assets</strong>
-  //                     <div className="flex">
-  //                       {element.assets.map((asset) => (
-  //                         <div
-  //                           key={uuidv4()}
-  //                           className="p-2 ml-2 bg-slate-300 rounded-md"
-  //                         >
-  //                           {asset}
-  //                         </div>
-  //                       ))}
-  //                     </div>
-  //                   </div>
-  //                   <div className="flex justify-between items-center my-3">
-  //                     <strong>Date of join</strong>
-  //                     <p>{format(element.createdAt, "PPP")}</p>
-  //                   </div>
-  //                 </main>
-
-  //                 <DialogFooter className="flex sm:justify-between">
-  //                   <Button type="button">Download</Button>
-
-  //                   <Button type="button">Update</Button>
-
-  //                   <Link href={`/relieve/${element.id}`}>
-  //                     <Button
-  //                       type="button"
-  //                       onClick={() => setCurrentEmployee(element)}
-  //                     >
-  //                       Relieve
-  //                     </Button>
-  //                   </Link>
-
-  //                   <DialogClose asChild>
-  //                     <Button type="button" variant="secondary">
-  //                       Close
-  //                     </Button>
-  //                   </DialogClose>
-  //                 </DialogFooter>
-  //               </DialogContent>
-  //             </Dialog>
-  //           </div>
-  //         ))
-  //       )}
-  //     </div>
-  //   )}
-  // </section>
 };
 
 export default Home;

@@ -40,21 +40,24 @@ export const POST = async (req: NextRequest) => {
 
     const result = await streamText({
       model: provider(model),
-      system: `You are an HR manager. You have an expertise in writing a relieving letter of the employees. You will be given the details of the employees and you will be responsible to write a professional and effective letter of relieving. You have to write the letter within the following parameters:
+      system: `You are an HR manager in Codelinear. You have an expertise in writing a relieving letter of the employees. You will be given the details of the employees and you will be responsible to write a professional and effective letter of relieving. Here are the parameters to write the letter:\n\n
   
        1. The name of the employee is ${name}.\n
        2. The designation of the employee is ${designation}.\n
        3. The department of the employee is ${department}.\n
-       4. The company name is Codelinear.\n
-       5. The number of days in the leave.\n 
-       6. The date of joining of employee is ${format(dateOfJoining, "PPP")}.\n 
-       7. The reason for the leave.\n 
-       8. The contact information of the company is ${contact} which is followed after relieving for further queries.\n 
-       9. The date of issuance of the letter is ${format(
+       4. Here is the date when employee joined the company ${format(
+         dateOfJoining,
+         "PPP"
+       )}.\n 
+       5. The contact information of the company is ${contact} which is followed after relieving for further queries.\n 
+       6. The date of issuance of the letter is ${format(
          dateOfIssuance,
          "PPP"
        )}.\n
-       10. The reason for relieve is ${reason}.\n`,
+       7. The reason for relieving is ${reason}.\n
+       8. The name of the HR is Syed Saif.\n
+       \n
+       Note: You must write the letter only with the above parameters. Do not write anything else.`,
       prompt,
     });
 

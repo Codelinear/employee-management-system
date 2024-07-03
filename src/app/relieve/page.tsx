@@ -2,7 +2,6 @@
 
 import React, { useCallback, useState } from "react";
 import { useStore } from "@/store";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { departments, designations, relieveReasons } from "@/constants/array";
 import { v4 as uuidv4 } from "uuid";
@@ -18,14 +17,11 @@ import { format } from "date-fns";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { relieveEmployeeSchema } from "@/lib/validator";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -44,8 +40,22 @@ import { useToast } from "@/components/ui/use-toast";
 import Markdown from "react-markdown";
 import axios from "axios";
 import Header from "@/components/navbar";
+import CalendarIcon from "@/components/ui/calendar-icon";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Inter } from "next/font/google";
+import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
+import { relieveEmployee } from "@/lib/actions/relieve-employee";
+
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 const RelieveEmployee = () => {
+  useAuthenticate();
+
   const [relieveLoading, setRelieveLoading] = useState(false);
   const [manualReason, setManualReason] = useState("");
 
@@ -59,13 +69,28 @@ const RelieveEmployee = () => {
     api: "/api/ai/relieve/write",
   });
 
+  let date;
+  let month;
+  let year;
+
+  const joiningDateArray = currentEmployee?.joiningDate.split(" / ");
+
+  if (joiningDateArray) {
+    date = parseInt(joiningDateArray[0]);
+    month = parseInt(joiningDateArray[1]);
+    year = parseInt(joiningDateArray[2]);
+  }
+
+  const joiningDate =
+    year && month && date ? new Date(year, month - 1, date) : new Date();
+
   const relieveDetailsForm = useForm<z.infer<typeof relieveEmployeeSchema>>({
     defaultValues: {
       name: currentEmployee?.name,
-      designation: "",
-      department: "",
-      companyName: "",
-      dateOfJoining: currentEmployee?.createdAt,
+      designation: currentEmployee?.currentRole || "",
+      department: currentEmployee?.department || "",
+      employeeId: currentEmployee?.employeeId || "",
+      dateOfJoining: joiningDate,
       contact: "hr@codelinear.com",
       dateOfIssuance: new Date(),
       reason: "",
@@ -84,45 +109,42 @@ const RelieveEmployee = () => {
       }
 
       if (values.reason === "other") {
-        relieveDetailsForm.setValue("reason", manualReason);
-
-        console.log(manualReason);
+        complete("Write a relieving letter.", {
+          body: { ...values, reason: manualReason },
+        });
+      } else {
+        complete("Write a relieving letter.", {
+          body: values,
+        });
       }
-
-      console.log(manualReason);
-      console.log(values);
-
-      complete("Write a relieving letter.", { body: values });
     },
-    [complete, toast, manualReason, relieveDetailsForm]
+    [complete, toast, manualReason]
   );
 
   const onRelieve = useCallback(async () => {
     try {
       setRelieveLoading(true);
 
-      await axios.put(
-        `/api/employee/relieve?employeeId=${currentEmployee?.id}`
+      const message = await relieveEmployee(
+        currentEmployee?.employeeId ||
+          relieveDetailsForm.getValues("employeeId")
       );
 
       toast({
-        description: "Employee has been relieved successfully",
+        description: message,
       });
 
-      router.push("/relieve/search");
+      router.push("/");
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error occured",
         description: "There is some error while relieving the employee",
-        // action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
       setRelieveLoading(false);
     }
-  }, [currentEmployee?.id, toast, router]);
-
-  // const [date, month, year] = currentEmployee?.joiningDate.split(" / ");
+  }, [currentEmployee, relieveDetailsForm, toast, router]);
 
   return (
     <main>
@@ -157,6 +179,8 @@ const RelieveEmployee = () => {
                           {...field}
                           placeholder="Employee name"
                           className="h-auto rounded-lg py-3 px-4 border border-[#00000033] placeholder:text-[#00000080]"
+                          disabled={!!currentEmployee?.name}
+                          required
                         />
                       </FormControl>
                     </FormItem>
@@ -182,11 +206,11 @@ const RelieveEmployee = () => {
                         <SelectContent>
                           {departments.map((element) => (
                             <SelectItem
-                              key={uuidv4()}
-                              value={element.toLowerCase()}
+                              key={element.id}
+                              value={element.department}
                               className="cursor-pointer"
                             >
-                              {element}
+                              {element.department}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -198,26 +222,40 @@ const RelieveEmployee = () => {
                 <FormField
                   control={relieveDetailsForm.control}
                   name="dateOfJoining"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Date of Joining</FormLabel>
-                      <FormControl>
-                        <Button
-                          disabled
-                          variant={"outline"}
-                          className="h-auto block w-full rounded-lg py-3 px-4 border border-[#00000033] placeholder:text-[#00000080]"
-                        >
-                          {/* {format(
-                            new Date(
-                              parseInt(year),
-                              parseInt(month) - 1,
-                              parseInt(date)
-                            ),
-                            "PPP"
-                          )} */}
-                          PPP
-                        </Button>
-                      </FormControl>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              disabled={!!currentEmployee?.joiningDate}
+                              variant={"outline"}
+                              className="h-auto w-full rounded-lg py-3 px-4 border border-[#00000033] flex items-center justify-between placeholder:text-[#00000080]"
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            className={cn(inter.className)}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </FormItem>
                   )}
                 />
@@ -233,6 +271,7 @@ const RelieveEmployee = () => {
                           {...field}
                           className="h-auto rounded-lg py-3 px-4 border border-[#00000033] placeholder:text-[#00000080]"
                           disabled
+                          required
                         />
                       </FormControl>
                     </FormItem>
@@ -243,7 +282,7 @@ const RelieveEmployee = () => {
               <div className="w-full ml-14 grid gap-3">
                 <FormField
                   control={relieveDetailsForm.control}
-                  name="companyName"
+                  name="employeeId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Employee ID</FormLabel>
@@ -253,6 +292,7 @@ const RelieveEmployee = () => {
                           className="h-auto rounded-lg py-3 px-4 border border-[#00000033] placeholder:text-[#00000080]"
                           placeholder="Employee ID"
                           disabled={!!currentEmployee?.employeeId}
+                          required
                         />
                       </FormControl>
                     </FormItem>
@@ -282,7 +322,7 @@ const RelieveEmployee = () => {
                           {designations.map((element) => (
                             <SelectItem
                               key={uuidv4()}
-                              value={element.toLowerCase()}
+                              value={element}
                               className="cursor-pointer"
                             >
                               {element}
@@ -304,14 +344,14 @@ const RelieveEmployee = () => {
                         <Button
                           variant={"outline"}
                           disabled
-                          className="h-auto block w-full rounded-lg py-3 px-4 border border-[#00000033] placeholder:text-[#00000080]"
+                          className="h-auto w-full rounded-lg py-3 px-4 border border-[#00000033] flex items-center justify-between placeholder:text-[#00000080]"
                         >
                           {field.value ? (
                             format(field.value, "PPP")
                           ) : (
                             <span>Pick a date</span>
                           )}
-                          {/* <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> */}
+                          <CalendarIcon />
                         </Button>
                       </FormControl>
                     </FormItem>
@@ -352,7 +392,8 @@ const RelieveEmployee = () => {
                           value={manualReason}
                           onChange={(e) => setManualReason(e.target.value)}
                           placeholder="Type a reason"
-                          className="absolute top-full left-0 w-full"
+                          className="absolute top-full left-0 w-full h-auto rounded-lg py-3 px-4 border border-[#00000033] placeholder:text-[#00000080]"
+                          required
                         />
                       )}
                     </FormItem>
@@ -363,8 +404,16 @@ const RelieveEmployee = () => {
 
             {!relieveDetailsForm.getValues("department") ||
             !relieveDetailsForm.getValues("designation") ||
-            !relieveDetailsForm.getValues("reason") ? (
-              <div className="flex justify-center mt-12">
+            !relieveDetailsForm.getValues("reason") ||
+            (relieveDetailsForm.getValues("reason") === "other" &&
+              !manualReason) ? (
+              <div
+                className={`flex transition-all justify-center ${
+                  relieveDetailsForm.getValues("reason") === "other"
+                    ? "mt-20"
+                    : "mt-12"
+                }`}
+              >
                 <Button
                   type="submit"
                   className="bg-[#D42B2B] w-36 hover:bg-[#D42B2B] text-[12px] px-6 py-3 h-auto rounded-lg"
@@ -372,6 +421,7 @@ const RelieveEmployee = () => {
                   Relieve Employee
                 </Button>
                 <Button
+                  type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     router.push("/");
@@ -383,11 +433,17 @@ const RelieveEmployee = () => {
               </div>
             ) : (
               <Dialog>
-                <div className="flex justify-center mt-5">
+                <div
+                  className={`flex transition-all justify-center ${
+                    relieveDetailsForm.getValues("reason") === "other"
+                      ? "mt-20"
+                      : "mt-12"
+                  }`}
+                >
                   <DialogTrigger asChild>
                     <Button
                       type="submit"
-                      className="bg-[#D42B2B] hover:bg-[#D42B2B] text-[12px] px-6 py-3 h-auto rounded-lg"
+                      className="bg-[#D42B2B] w-36 hover:bg-[#D42B2B] text-[12px] px-6 py-3 h-auto rounded-lg"
                     >
                       Relieve Employee
                     </Button>
@@ -397,7 +453,7 @@ const RelieveEmployee = () => {
                       e.preventDefault();
                       router.push("/");
                     }}
-                    className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent ml-3"
+                    className="text-[12px] w-36 px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent ml-3"
                   >
                     Clear form
                   </Button>
@@ -410,23 +466,26 @@ const RelieveEmployee = () => {
                     </DialogTitle>
                   </DialogHeader>
 
-                  <main className="my-5 w-full p-4 rounded-lg overflow-y-scroll h-[60vh] mx-auto border">
+                  <main className="my-5 w-full p-4 rounded-lg overflow-y-scroll scrollbar-hide h-[60vh] mx-auto border">
                     <Markdown>{completion}</Markdown>
                   </main>
 
                   <DialogFooter className="flex sm:justify-between">
-                    <Button type="button">Update</Button>
-
                     <DialogClose asChild>
-                      <Button type="button" onClick={onRelieve}>
+                      <Button
+                        type="button"
+                        onClick={onRelieve}
+                        className="bg-[#D42B2B] hover:bg-[#D42B2B] text-[12px] px-6 py-3 h-auto rounded-lg"
+                      >
                         Relieve
                       </Button>
                     </DialogClose>
 
-                    <Button type="button">Download</Button>
-
                     <DialogClose asChild>
-                      <Button type="button" variant="secondary">
+                      <Button
+                        type="button"
+                        className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent ml-3"
+                      >
                         Close
                       </Button>
                     </DialogClose>

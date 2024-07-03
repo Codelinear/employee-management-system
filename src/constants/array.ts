@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 export const relieveReasons = [
   "Consistent Poor Performance",
   "Violation of Company Policies",
@@ -9,24 +11,57 @@ export const relieveReasons = [
 ];
 
 export const designations = [
-  "Senior Software Engineer",
   "Software Engineer",
-  "Designer",
-  "QA",
-  "Software Tester",
-  "DevOps",
-  "Business Analyst",
-  "Data Scientist",
-  "Product Manager",
+  "Cloud Engineer",
+  "Financial Analyst",
+  "Accountant",
+  "SEO Specialist",
+  "Marketing Manager",
+  "Sales Manager",
+  "Recruitment Specialist",
+  "Product Designer",
+  "UI/UX Designer",
 ];
 
 export const departments = [
-  "Human Resources",
-  "Finance",
-  "Information Technology",
-  "Marketing",
-  "Sales",
-  "Customer Service",
+  {
+    id: uuidv4(),
+    department: "Human Resources",
+    departmentValue: "humanResources",
+  },
+  {
+    id: uuidv4(),
+    department: "Finance",
+    departmentValue: "finance",
+  },
+  {
+    id: uuidv4(),
+    department: "Information Technology",
+    departmentValue: "informationTechnology",
+  },
+  {
+    id: uuidv4(),
+    department: "Marketing",
+    departmentValue: "marketing",
+  },
+  {
+    id: uuidv4(),
+    department: "Sales",
+    departmentValue: "sales",
+  },
+  {
+    id: uuidv4(),
+    department: "Designing",
+    departmentValue: "designing",
+  },
+];
+
+export const experienceBandwidth = [
+  "Less than 1 year",
+  "1-2 years",
+  "3-5 years",
+  "6-10 years",
+  "10+ years",
 ];
 
 export const navLinkItems = [
@@ -58,13 +93,13 @@ export const addEmployeesInputs = [
     type: "text",
   },
   {
-    name: "personalEmail",
+    name: "companyEmail",
     label: "Company Email Address",
     placeholder: "Email Address",
     type: "email",
   },
   {
-    name: "companyEmail",
+    name: "personalEmail",
     label: "Personal Email Address",
     placeholder: "Email Address",
     type: "email",

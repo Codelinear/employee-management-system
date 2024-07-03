@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Employee Management System",
+  title: "Employee Management Tool",
   description:
     "This is the application for the Employee Management System who manages all the employees of the company.",
   icons: {

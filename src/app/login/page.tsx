@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { styled } from "@mui/material";
+import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
 
 const CssTextField = styled(TextField)({
   "& .MuiInputBase-input": {
@@ -21,6 +22,8 @@ const CssTextField = styled(TextField)({
 });
 
 const Login = () => {
+  useAuthenticate();
+
   const [isWrongCredentials, setIsWrongCredentials] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -34,14 +37,6 @@ const Login = () => {
   });
 
   const router = useRouter();
-
-  useEffect(() => {
-    const username = window.sessionStorage.getItem("username");
-
-    if (username) {
-      router.push("/");
-    }
-  }, [router]);
 
   const onSubmit = useCallback(async () => {
     if (!loginForm.getValues("password") || !loginForm.getValues("username")) {
@@ -72,7 +67,7 @@ const Login = () => {
     <main className="h-screen w-full bg-[#F5F5F5]">
       <Header />
       <hr />
-      <div className="mx-auto mt-[4rem] flex flex-col justify-center bg-white h-[24rem] w-[26rem] px-14">
+      <div className="mx-auto mt-[4rem] flex flex-col justify-center bg-white h-[62vh] w-[26rem] px-14">
         <h1 className="text-xl font-bold text-center mb-7">Log In</h1>
         {isWrongCredentials && (
           <p className="bg-[#F1F1F1] rounded-md mb-3 p-2 text-center ml-auto w-2/3 text-[10px]">
@@ -118,14 +113,13 @@ const Login = () => {
               control={loginForm.control}
               name="password"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="my-5">
                   <FormControl>
                     <CssTextField
                       error={isWrongCredentials}
                       value={field.value}
                       onChange={field.onChange}
                       type="password"
-                      className="my-5"
                       size="small"
                       fullWidth
                       label={
