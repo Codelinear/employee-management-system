@@ -1,22 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+"use server";
+
 import bcrypt from "bcryptjs";
 
-export const POST = async (req: NextRequest) => {
-  const { username, password } = await req.json();
-
+export const authenticate = async (username: string, password: string) => {
   if (
     username === process.env.ADMIN_USERNAME &&
     process.env.ADMIN_PASSWORD === password
   ) {
     const hashedUsername = await bcrypt.hash(username, 10);
 
-    return NextResponse.json({
+    return {
       authenticated: true,
       username: hashedUsername,
-    });
+    };
   } else {
-    return NextResponse.json({
+    return {
       authenticated: false,
-    });
+    };
   }
 };

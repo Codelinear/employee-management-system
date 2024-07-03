@@ -13,6 +13,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { styled } from "@mui/material";
 import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
+import { authenticate } from "@/lib/actions/authenticate";
 
 const CssTextField = styled(TextField)({
   "& .MuiInputBase-input": {
@@ -45,13 +46,16 @@ const Login = () => {
 
     setLoginLoading(true);
 
-    try {
-      const res = await axios.post("/api/auth/login", loginForm.getValues());
+    const username = loginForm.getValues("username");
+    const password = loginForm.getValues("password");
 
-      if (res.data.authenticated) {
+    try {
+      const res = await authenticate(username, password);
+
+      if (res.authenticated && res.username) {
         router.push("/");
 
-        window.sessionStorage.setItem("username", res.data.username);
+        window.sessionStorage.setItem("username", res.username);
         setIsWrongCredentials(false);
       } else {
         setIsWrongCredentials(true);
