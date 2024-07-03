@@ -9,7 +9,6 @@ import React, {
   useState,
 } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Employee } from "@prisma/client";
 import { useStore } from "@/store";
 import SearchIcon from "@/components/ui/search";
 import Funnel from "@/components/ui/funnel";
@@ -18,13 +17,13 @@ import Header from "@/components/navbar";
 import { cn } from "@/lib/utils";
 import { Inter } from "next/font/google";
 import { getEmployees } from "@/lib/actions/get-employees";
-import EmployeeDetails from "@/components/employee-details";
+import EmployeeProfile from "@/components/employee-profile";
 import UpdateEmployee from "@/components/update-employee";
 import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
 import SearchNotFound from "@/components/search-not-found";
 import ListLoading from "@/components/list-loading";
 import FilterOverlay from "@/components/filter-overlay";
-import { Filters } from "@/types";
+import { EmployeeDetails, Filters } from "@/types";
 import { filterByExperience } from "@/lib/functions";
 import Cross from "@/components/ui/cross";
 import ArrowDown from "@/components/ui/arrow-down";
@@ -35,7 +34,7 @@ const Home = () => {
   useAuthenticate();
 
   const [searchValue, setSearchValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isFilter, setIsFilter] = useState(false);
   const [isViewDetails, setIsViewDetails] = useState(false);
   const [isUpdateEmployee, setIsUpdateEmployee] = useState(false);
@@ -43,9 +42,13 @@ const Home = () => {
   const [isRelievedChecked, setIsRelievedChecked] = useState(false);
 
   // Employee list states
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [searchedEmployees, setSearchedEmployees] = useState<Employee[]>([]);
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<EmployeeDetails[]>([]);
+  const [searchedEmployees, setSearchedEmployees] = useState<EmployeeDetails[]>(
+    []
+  );
+  const [filteredEmployees, setFilteredEmployees] = useState<EmployeeDetails[]>(
+    []
+  );
 
   // Sorting states
   const [isDateSorting, setIsDateSorting] = useState(false);
@@ -61,13 +64,15 @@ const Home = () => {
 
   useEffect(() => {
     const initialLoad = async () => {
-      setIsLoading(true);
+      try {
+        const employees = await getEmployees();
 
-      const employees = await getEmployees();
-
-      setIsLoading(false);
-
-      setEmployees(employees);
+        setEmployees(employees);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initialLoad();
@@ -155,7 +160,7 @@ const Home = () => {
   );
 
   const viewDetails = useCallback(
-    (employeeDetails: Employee) => {
+    (employeeDetails: EmployeeDetails) => {
       setCurrentEmployee(employeeDetails);
       setIsViewDetails(true);
     },
@@ -166,18 +171,28 @@ const Home = () => {
     (sortType: string) => {
       if (sortType === "asc") {
         if (filteredEmployees.length) {
+          filteredEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           filteredEmployees.sort(
             (a, b) =>
               new Date(a.joiningDate).getTime() -
               new Date(b.joiningDate).getTime()
           );
         } else if (searchedEmployees.length) {
+          searchedEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           searchedEmployees.sort(
             (a, b) =>
               new Date(a.joiningDate).getTime() -
               new Date(b.joiningDate).getTime()
           );
         } else {
+          employees.forEach((item, index) => (item.originalIndex = index));
+
           employees.sort(
             (a, b) =>
               new Date(a.joiningDate).getTime() -
@@ -186,18 +201,28 @@ const Home = () => {
         }
       } else {
         if (filteredEmployees.length) {
+          filteredEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           filteredEmployees.sort(
             (a, b) =>
               new Date(b.joiningDate).getTime() -
               new Date(a.joiningDate).getTime()
           );
         } else if (searchedEmployees.length) {
+          searchedEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           searchedEmployees.sort(
             (a, b) =>
               new Date(b.joiningDate).getTime() -
               new Date(a.joiningDate).getTime()
           );
         } else {
+          employees.forEach((item, index) => (item.originalIndex = index));
+
           employees.sort(
             (a, b) =>
               new Date(b.joiningDate).getTime() -
@@ -213,18 +238,28 @@ const Home = () => {
     (sortType: string) => {
       if (sortType === "asc") {
         if (filteredEmployees.length) {
+          filteredEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           filteredEmployees.sort((a, b) => {
             if (a.name < b.name) return -1;
             if (a.name > b.name) return 1;
             return 0;
           });
         } else if (searchedEmployees.length) {
+          searchedEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           searchedEmployees.sort((a, b) => {
             if (a.name < b.name) return -1;
             if (a.name > b.name) return 1;
             return 0;
           });
         } else {
+          employees.forEach((item, index) => (item.originalIndex = index));
+
           employees.sort((a, b) => {
             if (a.name < b.name) return -1;
             if (a.name > b.name) return 1;
@@ -233,18 +268,28 @@ const Home = () => {
         }
       } else {
         if (filteredEmployees.length) {
+          filteredEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           filteredEmployees.sort((a, b) => {
             if (a.name < b.name) return 1;
             if (a.name > b.name) return -1;
             return 0;
           });
         } else if (searchedEmployees.length) {
+          searchedEmployees.forEach(
+            (item, index) => (item.originalIndex = index)
+          );
+
           searchedEmployees.sort((a, b) => {
             if (a.name < b.name) return 1;
             if (a.name > b.name) return -1;
             return 0;
           });
         } else {
+          employees.forEach((item, index) => (item.originalIndex = index));
+
           employees.sort((a, b) => {
             if (a.name < b.name) return 1;
             if (a.name > b.name) return -1;
@@ -256,27 +301,27 @@ const Home = () => {
     [employees, filteredEmployees, searchedEmployees]
   );
 
-  // const onSortRemove = useCallback(() => {
-  //   if (filteredEmployees.length) {
-  //     filteredEmployees.sort((a, b) => a.originalIndex - b.originalIndex);
+  const onSortRemove = useCallback(() => {
+    if (filteredEmployees.length) {
+      filteredEmployees.sort((a, b) => a.originalIndex! - b.originalIndex!);
 
-  //     filteredEmployees.forEach((item) => delete item.originalIndex);
-  //   } else if (searchedEmployees.length) {
-  //     searchedEmployees.sort((a, b) => a.originalIndex - b.originalIndex);
+      filteredEmployees.forEach((item) => delete item.originalIndex);
+    } else if (searchedEmployees.length) {
+      searchedEmployees.sort((a, b) => a.originalIndex! - b.originalIndex!);
 
-  //     searchedEmployees.forEach((item) => delete item.originalIndex);
-  //   } else {
-  //     employees.sort((a, b) => a.originalIndex - b.originalIndex);
+      searchedEmployees.forEach((item) => delete item.originalIndex);
+    } else {
+      employees.sort((a, b) => a.originalIndex! - b.originalIndex!);
 
-  //     employees.forEach((item) => delete item.originalIndex);
-  //   }
-  // }, [filteredEmployees, employees, searchedEmployees]);
+      employees.forEach((item) => delete item.originalIndex);
+    }
+  }, [filteredEmployees, employees, searchedEmployees]);
 
   if (searchNotFound) {
     employeesListRef.current = (
       <SearchNotFound font={inter} setSearchNotFound={setSearchNotFound} />
     );
-  } else if (employees.length || searchedEmployees.length) {
+  } else if (isLoading || employees.length || searchedEmployees.length) {
     let employeesList;
 
     if (searchedEmployees.length) {
@@ -370,7 +415,7 @@ const Home = () => {
 
   if (isViewDetails) {
     return (
-      <EmployeeDetails
+      <EmployeeProfile
         setIsViewDetails={setIsViewDetails}
         setIsUpdateEmployee={setIsUpdateEmployee}
       />
@@ -460,7 +505,7 @@ const Home = () => {
                   e.stopPropagation();
                   setIsAlphabeticalSorting(false);
                   setAlphabetSorting("desc");
-                  // onSortRemove();
+                  onSortRemove();
                 }}
                 className="pr-2 pl-4"
               >
@@ -483,7 +528,7 @@ const Home = () => {
                   e.stopPropagation();
                   setIsAlphabeticalSorting(false);
                   setAlphabetSorting("desc");
-                  // onSortRemove();
+                  onSortRemove();
                 }}
                 className="pr-2 pl-4"
               >
@@ -521,7 +566,7 @@ const Home = () => {
                   e.stopPropagation();
                   setIsDateSorting(false);
                   setDateSorting("desc");
-                  // onSortRemove();
+                  onSortRemove();
                 }}
                 className="pr-2 pl-4"
               >
@@ -544,7 +589,7 @@ const Home = () => {
                   e.stopPropagation();
                   setIsDateSorting(false);
                   setDateSorting("desc");
-                  // onSortRemove();
+                  onSortRemove();
                 }}
                 className="pr-2 pl-4"
               >

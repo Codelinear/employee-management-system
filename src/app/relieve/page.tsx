@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from "react";
 import { useStore } from "@/store";
 import { Input } from "@/components/ui/input";
+import { SyncLoader } from "react-spinners";
 import { departments, designations, relieveReasons } from "@/constants/array";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -65,7 +66,7 @@ const RelieveEmployee = () => {
 
   const { toast } = useToast();
 
-  const { completion, complete } = useCompletion({
+  const { completion, complete, isLoading } = useCompletion({
     api: "/api/ai/relieve/write",
   });
 
@@ -466,8 +467,17 @@ const RelieveEmployee = () => {
                     </DialogTitle>
                   </DialogHeader>
 
-                  <main className="my-5 w-full p-4 rounded-lg overflow-y-scroll scrollbar-hide h-[60vh] mx-auto border">
-                    <Markdown>{completion}</Markdown>
+                  <main className="my-5 w-full p-4 rounded-lg overflow-y-scroll scrollbar-hide h-[60vh] mx-auto">
+                    {isLoading ? (
+                      <SyncLoader
+                        color="#636363"
+                        size={15}
+                        margin={4}
+                        speedMultiplier={0.7}
+                      />
+                    ) : (
+                      <Markdown>{completion}</Markdown>
+                    )}
                   </main>
 
                   <DialogFooter className="flex sm:justify-between">

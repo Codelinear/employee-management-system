@@ -4,6 +4,7 @@ import {
   updateEmployeeSchema,
 } from "@/lib/validator";
 import { z } from "zod";
+import { Employee } from "@prisma/client";
 
 export type EmployeeDetailsForm = z.infer<typeof employeeDetailsSchema>;
 
@@ -53,4 +54,8 @@ export interface Experience {
   "3-5 years": boolean;
   "6-10 years": boolean;
   "10+ years": boolean;
+}
+
+export interface EmployeeDetails extends Employee {
+  originalIndex?: number;
 }

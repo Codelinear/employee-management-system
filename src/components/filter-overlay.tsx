@@ -3,9 +3,14 @@ import { Button } from "@/components/ui/button";
 import { v4 as uuidv4 } from "uuid";
 import { Separator } from "./ui/separator";
 import Cross from "./ui/cross";
-import { Employee } from "@prisma/client";
 import { departmentsObject, roleObject, experienceObject } from "@/constants";
-import { Department, Experience, Filters, Role } from "@/types";
+import {
+  Department,
+  EmployeeDetails,
+  Experience,
+  Filters,
+  Role,
+} from "@/types";
 import {
   departments,
   designations,
@@ -23,7 +28,7 @@ const FilterOverlay = ({
   setIsRelievedChecked,
 }: {
   setIsFilter: React.Dispatch<React.SetStateAction<boolean>>;
-  setFilteredEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
+  setFilteredEmployees: React.Dispatch<React.SetStateAction<EmployeeDetails[]>>;
   setIsRelievedChecked: React.Dispatch<React.SetStateAction<boolean>>;
   isRelievedChecked: boolean;
   onApplyFilters: (filters: Filters) => void;

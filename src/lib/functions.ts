@@ -1,4 +1,4 @@
-import { Employee } from "@prisma/client";
+import { EmployeeDetails } from "@/types";
 import { differenceInYears, parse } from "date-fns";
 
 const getEmployedYears = (joiningDate: string) => {
@@ -11,9 +11,9 @@ const getEmployedYears = (joiningDate: string) => {
 
 export const filterByExperience = (
   experienceFilters: string[],
-  employees: Employee[]
+  employees: EmployeeDetails[]
 ) => {
-  let totalFilteredEmployees: Array<Employee> = [];
+  let totalFilteredEmployees: Array<EmployeeDetails> = [];
 
   if (experienceFilters.includes("Less than 1 year")) {
     const filteredEmployees = employees.filter((element) => {
