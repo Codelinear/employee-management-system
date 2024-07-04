@@ -105,7 +105,6 @@ const Home = () => {
         setFilteredEmployees(relievedEmployees);
         setSearchedEmployees([]);
         setIsFilter(false);
-        setSearchNotFound(false);
         return;
       }
 
@@ -115,6 +114,7 @@ const Home = () => {
         !roleFilters.length
       ) {
         setFilteredEmployees([]);
+        setSearchNotFound(false);
         setIsFilter(false);
         return;
       }

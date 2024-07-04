@@ -36,16 +36,18 @@ export const updateEmployee = async (
     },
   });
 
-  // Creating ownerId for new assets
-  const assetsWithOwnerId = assets.map((asset: Asset) => ({
-    ...asset,
-    ownerId: employeeId,
-  }));
+  if (assets.length > 0) {
+    // Creating ownerId for new assets
+    const assetsWithOwnerId = assets.map((asset: Asset) => ({
+      ...asset,
+      ownerId: employeeId,
+    }));
 
-  // Creating new assets
-  await prisma.assets.createMany({
-    data: assetsWithOwnerId,
-  });
+    // Creating new assets
+    await prisma.assets.createMany({
+      data: assetsWithOwnerId,
+    });
+  }
 
   revalidatePath("/", "page");
 };
