@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 const FilterOverlay = ({
   setIsFilter,
+  setSearchNotFound,
   onApplyFilters,
   setFilteredEmployees,
   isRelievedChecked,
@@ -40,6 +41,7 @@ const FilterOverlay = ({
   setRoleFilters,
 }: {
   setIsFilter: React.Dispatch<React.SetStateAction<boolean>>;
+  setSearchNotFound: React.Dispatch<React.SetStateAction<boolean>>;
   setFilteredEmployees: React.Dispatch<React.SetStateAction<EmployeeDetails[]>>;
   setIsRelievedChecked: React.Dispatch<React.SetStateAction<boolean>>;
   isRelievedChecked: boolean;
@@ -142,6 +144,7 @@ const FilterOverlay = ({
 
     // Closing the filter overlay
     setIsFilter(false);
+    setSearchNotFound(false);
   }, [
     setIsFilter,
     setFilteredEmployees,

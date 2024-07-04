@@ -105,6 +105,7 @@ const Home = () => {
         setFilteredEmployees(relievedEmployees);
         setSearchedEmployees([]);
         setIsFilter(false);
+        setSearchNotFound(false);
         return;
       }
 
@@ -123,8 +124,6 @@ const Home = () => {
           departmentFilters.includes(employee.department)
         );
 
-        console.log(departmentFilteredEmployees)
-        
         setFilteredEmployees(departmentFilteredEmployees);
 
         if (!departmentFilteredEmployees.length) {
@@ -436,6 +435,7 @@ const Home = () => {
     <div>
       {isFilter && (
         <FilterOverlay
+          setSearchNotFound={setSearchNotFound}
           isRelievedChecked={isRelievedChecked}
           setIsRelievedChecked={setIsRelievedChecked}
           setFilteredEmployees={setFilteredEmployees}
