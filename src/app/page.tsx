@@ -23,17 +23,23 @@ import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
 import SearchNotFound from "@/components/search-not-found";
 import ListLoading from "@/components/list-loading";
 import FilterOverlay from "@/components/filter-overlay";
-import { EmployeeDetails, Filters } from "@/types";
 import { filterByExperience } from "@/lib/functions";
 import Cross from "@/components/ui/cross";
 import ArrowDown from "@/components/ui/arrow-down";
+import {
+  Department,
+  EmployeeDetails,
+  Experience,
+  Filters,
+  Role,
+} from "@/types";
+import { departmentsObject, roleObject, experienceObject } from "@/constants";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 const Home = () => {
   useAuthenticate();
 
-  const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isFilter, setIsFilter] = useState(false);
   const [isViewDetails, setIsViewDetails] = useState(false);
@@ -58,9 +64,18 @@ const Home = () => {
   );
   const [isAlphabeticalSorting, setIsAlphabeticalSorting] = useState(false);
 
+  // Filter overlay states
+  const [department, setDepartment] = useState<Department>(departmentsObject);
+  const [role, setRole] = useState<Role>(roleObject);
+  const [experience, setExperience] = useState<Experience>(experienceObject);
+  // Filter state
+  const [departmentFilters, setDepartmentFilters] = useState<string[]>([]);
+  const [experienceFilters, setExperienceFilters] = useState<string[]>([]);
+  const [roleFilters, setRoleFilters] = useState<string[]>([]);
+
   const employeesListRef = useRef<ReactNode | null>(null);
 
-  const { setCurrentEmployee } = useStore();
+  const { setCurrentEmployee, isEmployeeFetching } = useStore();
 
   useEffect(() => {
     const initialLoad = async () => {
@@ -76,32 +91,7 @@ const Home = () => {
     };
 
     initialLoad();
-  }, []);
-
-  const onSearch = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-
-      if (searchValue === "") {
-        setSearchedEmployees([]);
-        return;
-      }
-
-      const searchedEmployees = employees.filter(
-        (employee) =>
-          employee.name.toLowerCase() === searchValue.toLowerCase() ||
-          employee.employeeId.toLowerCase() === searchValue.toLowerCase()
-      );
-
-      if (!searchedEmployees.length) {
-        setSearchNotFound(true);
-      }
-
-      setSearchedEmployees(searchedEmployees);
-      setFilteredEmployees([]);
-    },
-    [searchValue, employees]
-  );
+  }, [isEmployeeFetching]);
 
   const onApplyFilters = useCallback(
     (filters: Filters) => {
@@ -133,7 +123,15 @@ const Home = () => {
           departmentFilters.includes(employee.department)
         );
 
+        console.log(departmentFilteredEmployees)
+        
         setFilteredEmployees(departmentFilteredEmployees);
+
+        if (!departmentFilteredEmployees.length) {
+          setSearchNotFound(true);
+        } else {
+          setSearchNotFound(false);
+        }
       }
 
       if (experienceFilters.length) {
@@ -143,6 +141,12 @@ const Home = () => {
         );
 
         setFilteredEmployees(experienceFilteredEmployees);
+
+        if (!experienceFilteredEmployees.length) {
+          setSearchNotFound(true);
+        } else {
+          setSearchNotFound(false);
+        }
       }
 
       if (roleFilters.length) {
@@ -151,6 +155,12 @@ const Home = () => {
         );
 
         setFilteredEmployees(roleFilteredEmployees);
+
+        if (!roleFilteredEmployees.length) {
+          setSearchNotFound(true);
+        } else {
+          setSearchNotFound(false);
+        }
       }
 
       setSearchedEmployees([]);
@@ -355,10 +365,10 @@ const Home = () => {
               <>
                 <div
                   key={uuidv4()}
-                  className="text-base text-black flex items-center"
+                  className="text-base relative text-black flex items-center"
                 >
                   {element.relieved && (
-                    <div className="absolute left-[83%] w-4 h-4 rounded-full bg-[#D42B2B] animate-pulse"></div>
+                    <div className="absolute left-[87%] w-4 h-4 rounded-full bg-[#D42B2B] animate-pulse"></div>
                   )}
                   <div className="w-[2.9rem] text-[#000000B2] py-[1.17rem] text-center bg-[#FCFCFC] text-[12px]">
                     {index < 10 ? `0${index + 1}` : `${index + 1}`}
@@ -431,6 +441,18 @@ const Home = () => {
           setFilteredEmployees={setFilteredEmployees}
           onApplyFilters={onApplyFilters}
           setIsFilter={setIsFilter}
+          department={department}
+          setDepartment={setDepartment}
+          role={role}
+          setRole={setRole}
+          experience={experience}
+          setExperience={setExperience}
+          departmentFilters={departmentFilters}
+          setDepartmentFilters={setDepartmentFilters}
+          experienceFilters={experienceFilters}
+          setExperienceFilters={setExperienceFilters}
+          roleFilters={roleFilters}
+          setRoleFilters={setRoleFilters}
         />
       )}
 
@@ -440,7 +462,7 @@ const Home = () => {
         <div className="w-full flex items-center bg-[#F7F7F7] rounded-lg px-7 py-[0.95rem] my-[1.57rem]">
           {" "}
           <form
-            onSubmit={onSearch}
+            onSubmit={(e) => e.preventDefault()}
             className="w-[26rem] flex rounded-md border border-[#00000033] bg-white items-center py-[0.78rem] px-5"
           >
             <SearchIcon />
@@ -450,14 +472,27 @@ const Home = () => {
                 inter.className
               )}
               type="search"
-              value={searchValue}
               onChange={(e) => {
                 if (e.target.value === "") {
                   setSearchNotFound(false);
                   setSearchedEmployees([]);
+                  return;
                 }
 
-                setSearchValue(e.target.value);
+                const lowerCaseValue = e.target.value.toLowerCase();
+
+                const searchedEmployees = employees.filter(
+                  (employee) =>
+                    employee.name.toLowerCase().includes(lowerCaseValue) ||
+                    employee.employeeId.toLowerCase().includes(lowerCaseValue)
+                );
+
+                if (!searchedEmployees.length) {
+                  setSearchNotFound(true);
+                }
+
+                setSearchedEmployees(searchedEmployees);
+                setFilteredEmployees([]);
               }}
               placeholder="Search Employee name, ID"
             />

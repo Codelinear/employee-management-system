@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { v4 as uuidv4 } from "uuid";
 import { Separator } from "./ui/separator";
@@ -26,22 +26,37 @@ const FilterOverlay = ({
   setFilteredEmployees,
   isRelievedChecked,
   setIsRelievedChecked,
+  department,
+  setDepartment,
+  role,
+  setRole,
+  experience,
+  setExperience,
+  departmentFilters,
+  setDepartmentFilters,
+  experienceFilters,
+  setExperienceFilters,
+  roleFilters,
+  setRoleFilters,
 }: {
   setIsFilter: React.Dispatch<React.SetStateAction<boolean>>;
   setFilteredEmployees: React.Dispatch<React.SetStateAction<EmployeeDetails[]>>;
   setIsRelievedChecked: React.Dispatch<React.SetStateAction<boolean>>;
   isRelievedChecked: boolean;
   onApplyFilters: (filters: Filters) => void;
+  department: Department;
+  role: Role;
+  experience: Experience;
+  departmentFilters: string[];
+  experienceFilters: string[];
+  roleFilters: string[];
+  setDepartment: React.Dispatch<React.SetStateAction<Department>>;
+  setRole: React.Dispatch<React.SetStateAction<Role>>;
+  setExperience: React.Dispatch<React.SetStateAction<Experience>>;
+  setDepartmentFilters: React.Dispatch<React.SetStateAction<string[]>>;
+  setExperienceFilters: React.Dispatch<React.SetStateAction<string[]>>;
+  setRoleFilters: React.Dispatch<React.SetStateAction<string[]>>;
 }) => {
-  const [department, setDepartment] = useState<Department>(departmentsObject);
-  const [role, setRole] = useState<Role>(roleObject);
-  const [experience, setExperience] = useState<Experience>(experienceObject);
-
-  // Filter state
-  const [departmentFilters, setDepartmentFilters] = useState<string[]>([]);
-  const [experienceFilters, setExperienceFilters] = useState<string[]>([]);
-  const [roleFilters, setRoleFilters] = useState<string[]>([]);
-
   const onDepartmentFilterClick = useCallback(
     (departmentValue: string, departmentName: string, add: boolean) => {
       // Removing the other filters
@@ -63,7 +78,7 @@ const FilterOverlay = ({
         [departmentValue]: !prev[departmentValue as keyof Department],
       }));
     },
-    [setDepartment]
+    [setExperience, setDepartment, setRole, setDepartmentFilters]
   );
 
   const onExperienceFilterClick = useCallback(
@@ -87,7 +102,7 @@ const FilterOverlay = ({
         [experience]: !prev[experience as keyof Experience],
       }));
     },
-    []
+    [setExperience, setExperienceFilters, setDepartment, setRole]
   );
 
   const onRoleFilterClick = useCallback(
@@ -109,7 +124,7 @@ const FilterOverlay = ({
         [role]: !prev[role as keyof Role],
       }));
     },
-    [setRole]
+    [setRole, setDepartment, setExperience, setRoleFilters]
   );
 
   const clearFilters = useCallback(() => {
@@ -127,7 +142,17 @@ const FilterOverlay = ({
 
     // Closing the filter overlay
     setIsFilter(false);
-  }, [setIsFilter, setFilteredEmployees, setIsRelievedChecked]);
+  }, [
+    setIsFilter,
+    setFilteredEmployees,
+    setIsRelievedChecked,
+    setDepartment,
+    setRole,
+    setExperience,
+    setDepartmentFilters,
+    setExperienceFilters,
+    setRoleFilters,
+  ]);
 
   return (
     <div
@@ -271,19 +296,7 @@ const FilterOverlay = ({
                 })
               }
               className={cn(
-                "text-[12px] p-3 h-9 rounded-md",
-                !departmentFilters.length
-                  ? "bg-[#182CE380] hover:bg-[#182CE380]"
-                  : "bg-[#182CE3] hover:bg-[#182CE3]",
-                !experienceFilters.length
-                  ? "bg-[#182CE380] hover:bg-[#182CE380]"
-                  : "bg-[#182CE3] hover:bg-[#182CE3]",
-                !roleFilters.length
-                  ? "bg-[#182CE380] hover:bg-[#182CE380]"
-                  : "bg-[#182CE3] hover:bg-[#182CE3]",
-                !isRelievedChecked
-                  ? "bg-[#182CE380] hover:bg-[#182CE380]"
-                  : "bg-[#182CE3] hover:bg-[#182CE3]"
+                "text-[12px] p-3 h-9 rounded-md bg-[#182CE380] hover:bg-[#182CE380]"
               )}
             >
               Apply filters

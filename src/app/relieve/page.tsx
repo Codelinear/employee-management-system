@@ -462,8 +462,8 @@ const RelieveEmployee = () => {
 
                 <DialogContent className="max-w-3xl">
                   <DialogHeader>
-                    <DialogTitle className="text-2xl text-center">
-                      Writing letter using AI
+                    <DialogTitle className="text-2xl font-medium text-center">
+                      Relieving letter
                     </DialogTitle>
                   </DialogHeader>
 

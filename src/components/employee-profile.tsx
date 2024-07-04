@@ -94,11 +94,12 @@ const EmployeeDetails = ({
     return;
   }
 
-  const givenDate = parse(
+  const formattedJoiningDate = format(
     currentEmployee.joiningDate,
-    "dd / MM / yyyy",
-    new Date()
+    "dd / MM / yyyy"
   );
+
+  const givenDate = parse(formattedJoiningDate, "dd / MM / yyyy", new Date());
 
   employedYears.current = differenceInYears(new Date(), givenDate);
 

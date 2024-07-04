@@ -1,7 +1,6 @@
 "use client";
 
 import Header from "@/components/navbar";
-import ImagePrompt from "@/components/ui/image-prompt";
 import { v4 as uuidv4 } from "uuid";
 import {
   Form,
@@ -10,7 +9,6 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { AssetsForm, EmployeeDetailsForm } from "@/types";
 import { Inter } from "next/font/google";
@@ -55,6 +53,7 @@ import { Asset } from "@/types";
 import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
 import CheckBoxChecked from "@/components/ui/checkbox-checked";
 import CheckboxUnchecked from "@/components/ui/checkbox-unchecked";
+import ImagePlaceholder from "@/components/ui/image-placeholder";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -71,6 +70,9 @@ export default function AddEmployee() {
     resume: null,
   });
   const [addEmployeeLoading, setAddEmployeeLoading] = useState(false);
+  const [joiningDays, setJoiningDays] = useState("");
+  const [joiningMonths, setJoiningMonths] = useState("");
+  const [joiningYears, setJoiningYears] = useState("");
 
   const assetsForm = useForm<AssetsForm>({
     defaultValues: {
@@ -203,7 +205,8 @@ export default function AddEmployee() {
             <main className="px-14 pt-12">
               <div className="flex items-start">
                 <div className="cursor-pointer">
-                  <ImagePrompt />
+                  {/* <ImagePrompt /> */}
+                  <ImagePlaceholder />
                 </div>
 
                 <div className="grid grid-rows-3 grid-cols-3 ml-[5rem] gap-y-[1rem] gap-x-[4.3rem]">

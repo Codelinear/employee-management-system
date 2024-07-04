@@ -1,8 +1,10 @@
 import { EmployeeDetails } from "@/types";
-import { differenceInYears, parse } from "date-fns";
+import { differenceInYears, format, parse } from "date-fns";
 
 const getEmployedYears = (joiningDate: string) => {
-  const givenDate = parse(joiningDate, "dd / MM / yyyy", new Date());
+  const formattedJoiningDate = format(joiningDate, "dd / MM / yyyy");
+
+  const givenDate = parse(formattedJoiningDate, "dd / MM / yyyy", new Date());
 
   const employedYears = differenceInYears(new Date(), givenDate);
 
@@ -17,6 +19,7 @@ export const filterByExperience = (
 
   if (experienceFilters.includes("Less than 1 year")) {
     const filteredEmployees = employees.filter((element) => {
+      console.log(getEmployedYears(element.joiningDate));
       const employedYears = getEmployedYears(element.joiningDate);
 
       return employedYears < 1;

@@ -9,7 +9,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useRouter } from "next/navigation";
 import Plus from "@/components/ui/plus";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -25,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { departments, designations } from "@/constants/array";
 import { AssetsForm, UpdateEmployeeForm } from "@/types";
-import ImagePrompt from "@/components/ui/image-prompt";
 import {
   Select,
   SelectContent,
@@ -53,6 +51,7 @@ import { updateEmployee } from "@/lib/actions/update-employee";
 import ListLoading from "./list-loading";
 import CheckBoxChecked from "./ui/checkbox-checked";
 import CheckboxUnchecked from "./ui/checkbox-unchecked";
+import ImagePlaceholder from "./ui/image-placeholder";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -81,7 +80,8 @@ const UpdateEmployee = ({
   const companyEmailInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
-  const { currentEmployee } = useStore();
+  const { currentEmployee, setIsEmployeeFetching, isEmployeeFetching } =
+    useStore();
 
   const assetsForm = useForm<AssetsForm>({
     defaultValues: {
@@ -146,6 +146,8 @@ const UpdateEmployee = ({
         setUpdateEmployeeLoading(true);
 
         await updateEmployee(currentEmployee.id, employeeId, values, assets);
+
+        setIsEmployeeFetching(!isEmployeeFetching);
       } catch {
       } finally {
         setUpdateEmployeeLoading(false);
@@ -159,6 +161,8 @@ const UpdateEmployee = ({
       assets,
       currentEmployee,
       setIsViewDetails,
+      isEmployeeFetching,
+      setIsEmployeeFetching,
     ]
   );
 
@@ -219,7 +223,8 @@ const UpdateEmployee = ({
           <main className="px-14 pt-12">
             <div className="flex items-start">
               <div className="cursor-pointer">
-                <ImagePrompt />
+                {/* <ImagePrompt /> */}
+                <ImagePlaceholder />
               </div>
 
               <div className="grid grid-rows-3 grid-cols-3 ml-[5rem] gap-y-[1.5rem] gap-x-[4.3rem]">

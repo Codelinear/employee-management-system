@@ -5,7 +5,7 @@ const ListLoading = ({ index }: { index: number }) => {
   return (
     <>
       <div className="flex items-center">
-        <div className="w-[2.9rem] text-[#000000B2] py-[1.17rem] text-center bg-[#FCFCFC]">
+        <div className="w-[2.9rem] text-[#000000B2] text-[12px] py-[1.17rem] text-center bg-[#FCFCFC]">
           {index + 1}
         </div>
         <div className="w-[18.7rem] pl-[1rem] py-[0.67rem]">
