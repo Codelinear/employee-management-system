@@ -155,20 +155,29 @@ const FilterOverlay = ({
     setDepartmentFilters,
     setExperienceFilters,
     setRoleFilters,
+    setSearchNotFound,
   ]);
 
   return (
     <div
-      className="h-screen w-full absolute bg-transparent z-10"
+      className="min-h-screen pb-10 w-full absolute bg-transparent z-10"
       onClick={() => setIsFilter(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#F7F7F7] min-h-[20rem] shadow-lg mx-14 mt-52 p-5 rounded-lg"
+        className="bg-[#F7F7F7] min-h-[20rem] shadow-lg mx-7 mt-28 sm:mx-14 sm:mt-72 lg:mt-52 p-5 rounded-lg"
       >
-        <div className="flex">
-          <div className="w-1/3">
-            <p className="text-[12px]">Filter by Department</p>
+        <div className="flex md:flex-row max-md:gap-y-5 flex-col">
+          <div className="md:w-1/3 w-full">
+            <p className="text-[12px] flex items-center justify-between">
+              <span>Filter by Department</span>
+              <div
+                onClick={() => setIsFilter(false)}
+                className="relative -translate-y-2 rounded-lg p-3 bg-[#EAEAEA]"
+              >
+                <Cross stroke="#000" />
+              </div>
+            </p>
             <div className="gap-2 mt-4 flex items-center flex-wrap">
               {departments.map((element) =>
                 department[element.departmentValue as keyof Department] ? (
@@ -207,7 +216,7 @@ const FilterOverlay = ({
 
           <Separator orientation="vertical" className="mx-6 h-3/4" />
 
-          <div className="w-1/3">
+          <div className="md:w-1/3 w-full">
             <p className="text-[12px]">Filter by Experience band</p>
             <div className="gap-2 mt-4 flex items-center flex-wrap">
               {experienceBandwidth.map((element) =>
@@ -235,7 +244,7 @@ const FilterOverlay = ({
 
           <Separator orientation="vertical" className="mx-6 h-3/4" />
 
-          <div className="w-1/3">
+          <div className="md:w-1/3 w-full">
             <p className="text-[12px]">Filter by Role</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {designations.map((element) =>
@@ -262,7 +271,7 @@ const FilterOverlay = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-10">
+        <div className="flex sm:flex-row flex-col items-start max-sm:gap-y-3 sm:items-center justify-between mt-10">
           <div className="flex items-center cursor-pointer">
             {isRelievedChecked ? (
               <div onClick={() => setIsRelievedChecked(false)}>

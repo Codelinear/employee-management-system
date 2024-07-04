@@ -342,60 +342,66 @@ const Home = () => {
     }
 
     employeesListRef.current = (
-      <section className="rounded-lg overflow-y-scroll max-h-[63.5vh] [scrollbar-width:thin]">
-        <div className="text-[13px] text-[#000000B2] flex items-center">
-          <div className="w-[2.9rem] text-[12px] py-[0.67rem] text-center bg-[#FCFCFC]">
-            Slno.
+      <div className="max-lg:overflow-x-scroll [scrollbar-width:thin] w-full">
+        <section className="rounded-lg w-[77.8rem] min-[1360px]:w-full overflow-y-scroll max-h-[62vh] [scrollbar-width:thin]">
+          <div className="text-[13px] text-[#000000B2] flex items-center">
+            <div className="w-[2.9rem] text-[12px] py-[0.67rem] text-center bg-[#FCFCFC]">
+              Slno.
+            </div>
+            <div className="w-[18.7rem] pl-[1rem] py-[0.67rem]">
+              Employee name
+            </div>
+            <div className="py-[0.67rem] w-[10.5rem]">Employee ID</div>
+            <div className="w-[17.5rem] py-[0.67rem]">Email Address</div>
+            <div className="py-[0.67rem]">Department</div>
           </div>
-          <div className="w-[18.7rem] pl-[1rem] py-[0.67rem]">
-            Employee name
-          </div>
-          <div className="py-[0.67rem] w-[10.5rem]">Employee ID</div>
-          <div className="w-[17.5rem] py-[0.67rem]">Email Address</div>
-          <div className="py-[0.67rem]">Department</div>
-        </div>
-        <hr />
+          <hr />
 
-        {isLoading
-          ? Array.from({ length: 10 }).map((_, index) => (
-              <ListLoading key={uuidv4()} index={index} />
-            ))
-          : employeesList.map((element, index) => (
-              <>
-                <div
-                  key={uuidv4()}
-                  className="text-base relative text-black flex items-center"
-                >
-                  {element.relieved && (
-                    <div className="absolute left-[87%] w-4 h-4 rounded-full bg-[#D42B2B] animate-pulse"></div>
-                  )}
-                  <div className="w-[2.9rem] text-[#000000B2] py-[1.17rem] text-center bg-[#FCFCFC] text-[12px]">
-                    {index < 10 ? `0${index + 1}` : `${index + 1}`}
-                  </div>
-                  <div className="w-[18.7rem] pl-[1rem] py-[0.67rem]">
-                    {element.name}
-                  </div>
-                  <div className="py-[0.67rem] w-[10.5rem]">
-                    {element.employeeId}
-                  </div>
-                  <div className="py-[0.67rem] w-[17.5rem]">
-                    {element.personalEmail}
-                  </div>
-                  <div className="py-[0.67rem] w-[20rem]">
-                    {element.department}
-                  </div>
-                  <Button
-                    className="bg-transparent px-2 h-auto py-2 rounded-sm hover:bg-transparent border text-black border-black"
-                    type="button"
-                    onClick={() => viewDetails(element)}
+          {isLoading
+            ? Array.from({ length: 10 }).map((_, index) => (
+                <ListLoading key={uuidv4()} index={index} />
+              ))
+            : employeesList.map((element, index) => (
+                <>
+                  <div
+                    key={uuidv4()}
+                    className={`text-base relative flex items-center ${
+                      element.relieved ? "text-[#D42B2B]" : "text-black"
+                    }`}
                   >
-                    View Details
-                  </Button>
-                </div>
-                <hr />
-              </>
-            ))}
-      </section>
+                    <div className="w-[2.9rem] text-[#000000B2] py-[1.17rem] text-center bg-[#FCFCFC] text-[12px]">
+                      {index < 10 ? `0${index + 1}` : `${index + 1}`}
+                    </div>
+                    <div className="w-[18.7rem] pl-[1rem] py-[0.67rem]">
+                      {element.name}
+                    </div>
+                    <div className="py-[0.67rem] w-[10.5rem]">
+                      {element.employeeId}
+                    </div>
+                    <div className="py-[0.67rem] w-[17.5rem]">
+                      {element.personalEmail}
+                    </div>
+                    <div className="py-[0.67rem] w-[20rem]">
+                      {element.department}
+                    </div>
+                    <Button
+                      className="bg-transparent px-2 h-auto py-2 rounded-sm hover:bg-transparent border text-black border-black"
+                      type="button"
+                      onClick={() => {
+                        setSearchedEmployees([]);
+                        setIsFilter(false);
+                        setFilteredEmployees([]);
+                        viewDetails(element);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                  <hr />
+                </>
+              ))}
+        </section>
+      </div>
     );
   } else if (!employees.length && !searchedEmployees.length) {
     employeesListRef.current = (
@@ -458,12 +464,12 @@ const Home = () => {
 
       <Header />
       <hr />
-      <main className="px-14">
-        <div className="w-full flex items-center bg-[#F7F7F7] rounded-lg px-7 py-[0.95rem] my-[1.57rem]">
+      <main className="px-7 sm:px-14">
+        <div className="w-full flex lg:flex-row flex-col items-start sm:items-center bg-[#F7F7F7] rounded-lg px-7 py-[0.95rem] my-[1.57rem]">
           {" "}
           <form
             onSubmit={(e) => e.preventDefault()}
-            className="w-[26rem] flex rounded-md border border-[#00000033] bg-white items-center py-[0.78rem] px-5"
+            className="sm:w-[26rem] w-full flex rounded-md border border-[#00000033] bg-white items-center py-4 lg:py-[0.78rem] px-5"
           >
             <SearchIcon />
             <input
@@ -497,141 +503,143 @@ const Home = () => {
               placeholder="Search Employee name, ID"
             />
           </form>
-          <Button
-            type="button"
-            onClick={() => setIsFilter(true)}
-            className={cn(
-              "flex items-center border text-black border-black bg-transparent hover:bg-transparent cursor-pointer rounded-lg text-[11px] px-3 ml-12",
-              inter.className
+          <div className="flex sm:flex-row flex-col items-start sm:items-center max-sm:gap-y-3 mt-8 lg:mt-0 lg:ml-12">
+            <Button
+              type="button"
+              onClick={() => setIsFilter(true)}
+              className={cn(
+                "flex items-center border text-black border-black bg-transparent hover:bg-transparent cursor-pointer rounded-lg text-[11px] px-3",
+                inter.className
+              )}
+            >
+              <Funnel />
+              <span className="ml-2">Filter by</span>
+            </Button>
+            <span className="ml-5 mr-3 text-[#00000099] text-[12px]">
+              Sort by:
+            </span>
+            {!isAlphabeticalSorting ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  setIsAlphabeticalSorting(true);
+                  onAplhaSort("asc");
+                  setIsDateSorting(false);
+                }}
+                className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2"
+              >
+                <ArrowUp />
+                <span className="ml-2">Alphabetical</span>
+              </Button>
+            ) : alphabetSorting === "asc" ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  setAlphabetSorting("desc");
+                  onAplhaSort("desc");
+                }}
+                className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
+              >
+                <ArrowDown />
+                <span className="ml-2">Alphabetical</span>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAlphabeticalSorting(false);
+                    setAlphabetSorting("desc");
+                    onSortRemove();
+                  }}
+                  className="pr-2 pl-4"
+                >
+                  <Cross stroke="#000000" />
+                </div>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => {
+                  setAlphabetSorting("asc");
+                  onAplhaSort("asc");
+                }}
+                className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
+              >
+                <ArrowUp />
+                <span className="ml-2">Alphabetical</span>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAlphabeticalSorting(false);
+                    setAlphabetSorting("desc");
+                    onSortRemove();
+                  }}
+                  className="pr-2 pl-4"
+                >
+                  <Cross stroke="#000000" />
+                </div>
+              </Button>
             )}
-          >
-            <Funnel />
-            <span className="ml-2">Filter by</span>
-          </Button>
-          <span className="ml-5 mr-3 text-[#00000099] text-[12px]">
-            Sort by:
-          </span>
-          {!isAlphabeticalSorting ? (
-            <Button
-              type="button"
-              onClick={() => {
-                setIsAlphabeticalSorting(true);
-                onAplhaSort("asc");
-                setIsDateSorting(false);
-              }}
-              className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2"
-            >
-              <ArrowUp />
-              <span className="ml-2">Alphabetical</span>
-            </Button>
-          ) : alphabetSorting === "asc" ? (
-            <Button
-              type="button"
-              onClick={() => {
-                setAlphabetSorting("desc");
-                onAplhaSort("desc");
-              }}
-              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
-            >
-              <ArrowDown />
-              <span className="ml-2">Alphabetical</span>
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
+            {/* ------------------------------------------------------------------------------ */}
+            {!isDateSorting ? (
+              <Button
+                type="button"
+                onClick={() => {
                   setIsAlphabeticalSorting(false);
-                  setAlphabetSorting("desc");
-                  onSortRemove();
+                  setIsDateSorting(true);
+                  onDateSort("asc");
                 }}
-                className="pr-2 pl-4"
+                className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2 sm:ml-3"
               >
-                <Cross stroke="#000000" />
-              </div>
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={() => {
-                setAlphabetSorting("asc");
-                onAplhaSort("asc");
-              }}
-              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
-            >
-              <ArrowUp />
-              <span className="ml-2">Alphabetical</span>
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsAlphabeticalSorting(false);
-                  setAlphabetSorting("desc");
-                  onSortRemove();
-                }}
-                className="pr-2 pl-4"
-              >
-                <Cross stroke="#000000" />
-              </div>
-            </Button>
-          )}
-          {/* ------------------------------------------------------------------------------ */}
-          {!isDateSorting ? (
-            <Button
-              type="button"
-              onClick={() => {
-                setIsAlphabeticalSorting(false);
-                setIsDateSorting(true);
-                onDateSort("asc");
-              }}
-              className="flex items-center border text-black border-black bg-transparent hover:bg-transparent rounded-lg text-[12px] px-2 ml-3"
-            >
-              <ArrowUp />
-              <span className="ml-2">Date added</span>
-            </Button>
-          ) : dateSorting === "asc" ? (
-            <Button
-              type="button"
-              onClick={() => {
-                setDateSorting("desc");
-                onDateSort("desc");
-              }}
-              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
-            >
-              <ArrowDown />
-              <span className="ml-2">Date added</span>
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDateSorting(false);
+                <ArrowUp />
+                <span className="ml-2">Date added</span>
+              </Button>
+            ) : dateSorting === "asc" ? (
+              <Button
+                type="button"
+                onClick={() => {
                   setDateSorting("desc");
-                  onSortRemove();
+                  onDateSort("desc");
                 }}
-                className="pr-2 pl-4"
+                className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
               >
-                <Cross stroke="#000000" />
-              </div>
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={() => {
-                setDateSorting("asc");
-                onDateSort("asc");
-              }}
-              className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
-            >
-              <ArrowUp />
-              <span className="ml-2">Date added</span>
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDateSorting(false);
-                  setDateSorting("desc");
-                  onSortRemove();
+                <ArrowDown />
+                <span className="ml-2">Date added</span>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDateSorting(false);
+                    setDateSorting("desc");
+                    onSortRemove();
+                  }}
+                  className="pr-2 pl-4"
+                >
+                  <Cross stroke="#000000" />
+                </div>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => {
+                  setDateSorting("asc");
+                  onDateSort("asc");
                 }}
-                className="pr-2 pl-4"
+                className="flex items-center text-black border-black bg-[#EAEAEA] hover:bg-[#EAEAEA] rounded-lg text-[12px] px-2 ml-3"
               >
-                <Cross stroke="#000000" />
-              </div>
-            </Button>
-          )}
+                <ArrowUp />
+                <span className="ml-2">Date added</span>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDateSorting(false);
+                    setDateSorting("desc");
+                    onSortRemove();
+                  }}
+                  className="pr-2 pl-4"
+                >
+                  <Cross stroke="#000000" />
+                </div>
+              </Button>
+            )}
+          </div>
         </div>
 
         {employeesListRef.current}

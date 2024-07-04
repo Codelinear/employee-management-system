@@ -185,7 +185,7 @@ export default function AddEmployee() {
     <>
       {addEmployeeLoading && (
         <div className="h-screen w-full fixed backdrop-blur-3xl top-0 left-0 z-50 flex items-center justify-center">
-          <h1 className="text-4xl">Adding employee... Please wait.</h1>
+          <h1 className="text-4xl text-center mx-5">Adding employee... Please wait.</h1>
         </div>
       )}
       <Header />
@@ -202,14 +202,14 @@ export default function AddEmployee() {
         <Form {...userDetailsForm}>
           <form onSubmit={userDetailsForm.handleSubmit(onAddEmployeeSubmit)}>
             {" "}
-            <main className="px-14 pt-12">
-              <div className="flex items-start">
+            <main className="px-7 sm:px-14 pt-12">
+              <div className="flex lg:flex-row flex-col max-lg:gap-y-16 items-center lg:items-start">
                 <div className="cursor-pointer">
                   {/* <ImagePrompt /> */}
                   <ImagePlaceholder />
                 </div>
 
-                <div className="grid grid-rows-3 grid-cols-3 ml-[5rem] gap-y-[1rem] gap-x-[4.3rem]">
+                <div className="grid grid-rows-8 sm:w-auto w-full px-5 sm:px-0 sm:grid-rows-4 md:mb-0 mb-10 md:grid-rows-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:ml-[3.5rem] xl:ml-[5rem] gap-y-[1rem] gap-x-[2.7rem] xl:gap-x-[4.3rem]">
                   <FormField
                     control={userDetailsForm.control}
                     name="name"
@@ -393,7 +393,7 @@ export default function AddEmployee() {
                               <Button
                                 variant={"outline"}
                                 className={cn(
-                                  "w-60 mt-2 h-auto py-3 px-4 flex items-center justify-between",
+                                  "w-full mt-2 h-auto py-3 px-4 flex items-center justify-between",
                                   inter.className
                                 )}
                               >
@@ -427,57 +427,59 @@ export default function AddEmployee() {
                   />
                 </div>
               </div>
-              <div className="my-8">
+              <div className="sm:my-8 mt-8 mb-14">
                 <h2
                   className={cn("text-2xl mb-8 font-semibold", inter.className)}
                 >
                   Assets owned
                 </h2>
 
-                <div className="rounded-tl-lg rounded-tr-lg overflow-hidden">
-                  <div className="text-[14px] text-[#000000B2] flex items-center">
-                    <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
-                      Slno.
-                    </div>
-                    <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
-                      Asset name
-                    </div>
-                    <div className="py-[0.67rem] w-[12rem]">Asset ID</div>
-                    <div className="py-[0.67rem] w-[11.5rem]">
-                      Date assigned
-                    </div>
-                    <div className="py-[0.67rem]">Asset type</div>
-                  </div>
-                  <hr />
-
-                  {assets.map((element, index) => (
-                    <>
-                      <div className="text-[14px] text-black flex items-center">
-                        <div className="w-[2.9rem] py-[0.67rem] text-[#000000B2] text-center bg-[#FCFCFC]">
-                          {index < 10 ? `0${index + 1}` : `${index + 1}`}
-                        </div>
-                        <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
-                          {element.assetName}
-                        </div>
-                        <div className="py-[0.67rem] w-[12rem]">
-                          {element.assetId}
-                        </div>
-                        <div className="py-[0.67rem] w-[12rem]">
-                          {format(element.dateAssigned, "MM / dd / yyyy")}
-                        </div>
-                        <div className="py-[0.67rem] w-[13.5rem]">
-                          {element.assetType}
-                        </div>
-                        <div
-                          className={`cursor-pointer`}
-                          onClick={() => onDeleteAsset(element.assetId)}
-                        >
-                          <DeleteIcon />
-                        </div>
+                <div className="w-full overflow-x-scroll min-[1080px]:overflow-x-auto [scrollbar-width:thin]">
+                  <div className="rounded-tl-lg min-[1080px]:w-full w-[60rem] rounded-tr-lg overflow-hidden">
+                    <div className="text-[14px] text-[#000000B2] flex items-center">
+                      <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
+                        Slno.
                       </div>
-                      <hr />
-                    </>
-                  ))}
+                      <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
+                        Asset name
+                      </div>
+                      <div className="py-[0.67rem] w-[12rem]">Asset ID</div>
+                      <div className="py-[0.67rem] w-[12rem]">
+                        Date assigned
+                      </div>
+                      <div className="py-[0.67rem]">Asset type</div>
+                    </div>
+                    <hr />
+
+                    {assets.map((element, index) => (
+                      <>
+                        <div className="text-[14px] text-black flex items-center">
+                          <div className="w-[2.9rem] py-[0.67rem] text-[#000000B2] text-center bg-[#FCFCFC]">
+                            {index < 10 ? `0${index + 1}` : `${index + 1}`}
+                          </div>
+                          <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
+                            {element.assetName}
+                          </div>
+                          <div className="py-[0.67rem] w-[12rem]">
+                            {element.assetId}
+                          </div>
+                          <div className="py-[0.67rem] w-[12rem]">
+                            {format(element.dateAssigned, "MM / dd / yyyy")}
+                          </div>
+                          <div className="py-[0.67rem] w-[13.5rem]">
+                            {element.assetType}
+                          </div>
+                          <div
+                            className={`cursor-pointer`}
+                            onClick={() => onDeleteAsset(element.assetId)}
+                          >
+                            <DeleteIcon />
+                          </div>
+                        </div>
+                        <hr />
+                      </>
+                    ))}
+                  </div>
                 </div>
 
                 <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
@@ -490,7 +492,7 @@ export default function AddEmployee() {
                       <span className="ml-2">Assign Asset</span>
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="max-w-[60rem] p-10">
+                  <AlertDialogContent className="lg:max-w-[60rem] w-[85vw] p-10">
                     <AlertDialogHeader>
                       <AlertDialogTitle className="text-2xl">
                         Assign Asset
@@ -505,7 +507,7 @@ export default function AddEmployee() {
                           assetsForm.handleSubmit(onAssetSubmit)();
                         }}
                       >
-                        <div className="flex flex-wrap items-center mt-6 gap-y-4 gap-x-16">
+                        <div className="flex flex-wrap items-center [scrollbar-width:thin] max-lg:h-[50vh] max-lg:overflow-y-scroll mb-16 gap-y-4 gap-x-16">
                           <FormField
                             control={assetsForm.control}
                             name="assetName"
@@ -597,7 +599,27 @@ export default function AddEmployee() {
                             control={assetsForm.control}
                             name="dateAssigned"
                             render={({ field }) => (
-                              <FormItem className="flex flex-col">
+                              <FormItem className="flex relative flex-col">
+                                <div className="mt-1 mb-8 absolute left-0 top-full translate-y-2 flex items-center">
+                                  {useTodayDate ? (
+                                    <div onClick={() => setUseTodayDate(false)}>
+                                      <CheckBoxChecked />
+                                    </div>
+                                  ) : (
+                                    <div onClick={() => setUseTodayDate(true)}>
+                                      <CheckboxUnchecked />
+                                    </div>
+                                  )}
+                                  <p
+                                    onClick={() =>
+                                      setUseTodayDate((prev) => !prev)
+                                    }
+                                    className="text-sm ml-1.5 cursor-pointer"
+                                  >
+                                    Use today&apos;s date
+                                  </p>
+                                </div>
+
                                 <FormLabel className="opacity-70 text-sm block">
                                   Date Assigned
                                 </FormLabel>
@@ -608,7 +630,7 @@ export default function AddEmployee() {
                                         variant={"outline"}
                                         disabled={useTodayDate}
                                         className={cn(
-                                          "w-60 mt-2 pl-5 flex items-center justify-between",
+                                          "w-60 mt-2 h-auto py-[0.9rem] px-4 flex items-center justify-between",
                                           inter.className
                                         )}
                                       >
@@ -643,25 +665,7 @@ export default function AddEmployee() {
                           />
                         </div>
 
-                        <div className="mt-1 mb-8 flex items-center">
-                          {useTodayDate ? (
-                            <div onClick={() => setUseTodayDate(false)}>
-                              <CheckBoxChecked />
-                            </div>
-                          ) : (
-                            <div onClick={() => setUseTodayDate(true)}>
-                              <CheckboxUnchecked />
-                            </div>
-                          )}
-                          <p
-                            onClick={() => setUseTodayDate((prev) => !prev)}
-                            className="text-sm ml-1.5 cursor-pointer"
-                          >
-                            Use today&apos;s date
-                          </p>
-                        </div>
-
-                        <AlertDialogFooter className="sm:justify-start">
+                        <AlertDialogFooter className="items-center justify-start sm:justify-start flex-row">
                           <Button
                             type="submit"
                             className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"
@@ -669,10 +673,16 @@ export default function AddEmployee() {
                             Assign Asset
                           </Button>
                           <AlertDialogCancel
+                            className="mt-0"
+                            asChild
                             onClick={() => assetsForm.reset()}
-                            className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent"
                           >
-                            Cancel
+                            <Button
+                              type="submit"
+                              className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent"
+                            >
+                              Cancel
+                            </Button>
                           </AlertDialogCancel>
                         </AlertDialogFooter>
                       </form>
@@ -688,7 +698,7 @@ export default function AddEmployee() {
                   Employee Documents
                 </h2>
 
-                <div className="flex items-center">
+                <div className="flex sm:flex-row flex-col items-start max-sm:gap-y-5 sm:items-center">
                   <div className="flex items-center">
                     <FormField
                       control={userDetailsForm.control}
@@ -726,7 +736,7 @@ export default function AddEmployee() {
                     </div>{" "} */}
                   </div>
 
-                  <div className="flex items-center mx-8">
+                  <div className="flex items-center sm:mx-8">
                     <FormField
                       control={userDetailsForm.control}
                       name="aadhaarNumber"
@@ -772,7 +782,7 @@ export default function AddEmployee() {
                 </div>
               </div>
             </main>
-            <footer className="flex px-14 items-center justify-start my-10">
+            <footer className="flex px-7 sm:px-14 items-center justify-start my-10">
               <Button
                 type="submit"
                 className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"

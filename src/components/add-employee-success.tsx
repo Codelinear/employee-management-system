@@ -47,10 +47,10 @@ const AddEmployeeSuccess = ({
   assetsForm: AssetsForm;
 }) => {
   return (
-    <div className="mt-16 rounded-md border w-[26rem] py-8 flex flex-col items-center mx-auto border-[#00000033]">
+    <div className="mt-16 rounded-md border mb-7 w-[90vw] min-[500px]:w-[26rem] py-8 flex flex-col items-center mx-5 min-[500px]:mx-auto border-[#00000033]">
       <AddEmployeeSuccessIcon />
       <h2 className="text-3xl font-medium my-8">Employee added!</h2>
-      <div>
+      <div className="flex min-[500px]:flex-row flex-col min-[500px]:gap-x-3 gap-y-3 min-[500px]:justify-center">
         <Button
           className={cn("bg-[#182CE3] hover:bg-[#182CE3]", font.className)}
           onClick={() => {
@@ -65,7 +65,7 @@ const AddEmployeeSuccess = ({
         <Link href="/">
           <Button
             className={cn(
-              "bg-transparent hover:bg-transparent ml-3 text-black border border-black",
+              "bg-transparent hover:bg-transparent text-black border border-black",
               font.className
             )}
           >

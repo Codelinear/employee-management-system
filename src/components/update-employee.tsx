@@ -220,14 +220,14 @@ const UpdateEmployee = ({
           onSubmit={updateEmployeeForm.handleSubmit(onUpdateEmployeeSubmit)}
         >
           {" "}
-          <main className="px-14 pt-12">
-            <div className="flex items-start">
+          <main className="px-7 sm:px-14 pt-12">
+            <div className="flex xl:flex-row flex-col max-xl:gap-y-16 items-center lg:items-start">
               <div className="cursor-pointer">
                 {/* <ImagePrompt /> */}
                 <ImagePlaceholder />
               </div>
 
-              <div className="grid grid-rows-3 grid-cols-3 ml-[5rem] gap-y-[1.5rem] gap-x-[4.3rem]">
+              <div className="grid grid-rows-8 sm:w-auto w-full px-5 sm:px-0 sm:grid-rows-4 md:mb-0 mb-10 md:grid-rows-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:ml-[3.5rem] xl:ml-[5rem] gap-y-[1rem] gap-x-[2.7rem] xl:gap-x-[4.3rem]">
                 <FormField
                   control={updateEmployeeForm.control}
                   name="name"
@@ -239,7 +239,7 @@ const UpdateEmployee = ({
                             onEditClick("name");
                             nameInputRef.current?.focus();
                           }}
-                          className="absolute top-[42px] cursor-pointer left-[195px]"
+                          className="absolute top-[55%] cursor-pointer left-[87%]"
                         >
                           <Pencil />
                         </div>
@@ -281,7 +281,7 @@ const UpdateEmployee = ({
                             onEditClick("companyEmail");
                             companyEmailInputRef.current?.focus();
                           }}
-                          className="absolute top-[42px] left-[195px] cursor-pointer"
+                          className="absolute top-[55%] cursor-pointer left-[87%]"
                         >
                           <Pencil />
                         </div>
@@ -326,7 +326,7 @@ const UpdateEmployee = ({
                             onEditClick("personalEmail");
                             personalEmailInputRef.current?.focus();
                           }}
-                          className="absolute top-[42px] left-[195px] cursor-pointer"
+                          className="absolute top-[55%] cursor-pointer left-[87%]"
                         >
                           <Pencil />
                         </div>
@@ -405,7 +405,7 @@ const UpdateEmployee = ({
                             onEditClick("phone");
                             phoneInputRef.current?.focus();
                           }}
-                          className="absolute top-[42px] left-[195px] cursor-pointer"
+                          className="absolute top-[55%] cursor-pointer left-[87%]"
                         >
                           <Pencil />
                         </div>
@@ -473,6 +473,7 @@ const UpdateEmployee = ({
                 />
               </div>
             </div>
+
             <div className="my-8">
               <h2
                 className={cn("text-2xl mb-8 font-semibold", inter.className)}
@@ -480,54 +481,60 @@ const UpdateEmployee = ({
                 Assets owned
               </h2>
 
-              <div className="rounded-tl-lg rounded-tr-lg overflow-hidden">
-                <div className="text-[14px] text-[#000000B2] flex items-center">
-                  <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
-                    Slno.
+              <div className="w-full overflow-x-scroll min-[1080px]:overflow-x-auto [scrollbar-width:thin]">
+                <div className="rounded-tl-lg min-[1080px]:w-full w-[60rem] rounded-tr-lg overflow-hidden">
+                  <div className="text-[14px] text-[#000000B2] flex items-center">
+                    <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
+                      Slno.
+                    </div>
+                    <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
+                      Asset name
+                    </div>
+                    <div className="py-[0.67rem] w-[10rem]">Asset ID</div>
+                    <div className="py-[0.67rem] w-[10.5rem]">
+                      Date assigned
+                    </div>
+                    <div className="py-[0.67rem]">Asset type</div>
                   </div>
-                  <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
-                    Asset name
-                  </div>
-                  <div className="py-[0.67rem] w-[10rem]">Asset ID</div>
-                  <div className="py-[0.67rem] w-[10.5rem]">Date assigned</div>
-                  <div className="py-[0.67rem]">Asset type</div>
-                </div>
-                <hr />
+                  <hr />
 
-                {assetLoading
-                  ? Array.from({ length: 4 }).map((_, index) => (
-                      <ListLoading key={uuidv4()} index={index} />
-                    ))
-                  : assets.map((element, index) => (
-                      <>
-                        <div className="text-[14px] text-black flex items-center">
-                          <div className="w-[2.9rem] py-[0.67rem] text-[#000000B2] text-center bg-[#FCFCFC]">
-                            {index < 10 ? `0${index + 1}` : `${index + 1}`}
+                  {assetLoading
+                    ? Array.from({ length: 4 }).map((_, index) => (
+                        <ListLoading key={uuidv4()} index={index} />
+                      ))
+                    : assets.map((element, index) => (
+                        <>
+                          <div className="text-[14px] text-black flex items-center">
+                            <div className="w-[2.9rem] py-[0.67rem] text-[#000000B2] text-center bg-[#FCFCFC]">
+                              {index < 10 ? `0${index + 1}` : `${index + 1}`}
+                            </div>
+                            <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
+                              {element.assetName}
+                            </div>
+                            <div className="py-[0.67rem] w-[10rem]">
+                              {element.assetId}
+                            </div>
+                            <div className="py-[0.67rem] w-[10.5rem]">
+                              {format(element.dateAssigned, "MM / dd / yyyy")}
+                            </div>
+                            <div className="py-[0.67rem] w-[13.5rem]">
+                              {element.assetType}
+                            </div>
+                            <div
+                              className={`cursor-pointer ${
+                                updateEmployeeLoading
+                                  ? "pointer-events-none"
+                                  : ""
+                              }`}
+                              onClick={() => onDeleteAsset(element.assetId)}
+                            >
+                              <DeleteIcon />
+                            </div>
                           </div>
-                          <div className="w-[19rem] pl-[1rem] py-[0.67rem]">
-                            {element.assetName}
-                          </div>
-                          <div className="py-[0.67rem] w-[10rem]">
-                            {element.assetId}
-                          </div>
-                          <div className="py-[0.67rem] w-[10.5rem]">
-                            {format(element.dateAssigned, "MM / dd / yyyy")}
-                          </div>
-                          <div className="py-[0.67rem] w-[13.5rem]">
-                            {element.assetType}
-                          </div>
-                          <div
-                            className={`cursor-pointer ${
-                              updateEmployeeLoading ? "pointer-events-none" : ""
-                            }`}
-                            onClick={() => onDeleteAsset(element.assetId)}
-                          >
-                            <DeleteIcon />
-                          </div>
-                        </div>
-                        <hr />
-                      </>
-                    ))}
+                          <hr />
+                        </>
+                      ))}
+                </div>
               </div>
 
               <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
@@ -541,7 +548,7 @@ const UpdateEmployee = ({
                     <span className="ml-2">Assign Asset</span>
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="max-w-[60rem] p-10">
+                <AlertDialogContent className="lg:max-w-[60rem] w-[85vw] p-10">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-2xl">
                       Assign Asset
@@ -556,7 +563,7 @@ const UpdateEmployee = ({
                         assetsForm.handleSubmit(onAssetSubmit)();
                       }}
                     >
-                      <div className="flex flex-wrap items-center mt-6 gap-y-4 gap-x-16">
+                      <div className="flex flex-wrap items-center [scrollbar-width:thin] max-lg:h-[50vh] max-lg:overflow-y-scroll mb-16 gap-y-4 gap-x-16">
                         <FormField
                           control={assetsForm.control}
                           name="assetName"
@@ -700,7 +707,13 @@ const UpdateEmployee = ({
                             <CheckBoxChecked />
                           </div>
                         ) : (
-                          <div onClick={() => setUseTodayDate(true)}>
+                          <div
+                            onClick={() => {
+                              assetsForm.setValue("dateAssigned", new Date());
+
+                              setUseTodayDate(true);
+                            }}
+                          >
                             <CheckboxUnchecked />
                           </div>
                         )}
@@ -712,7 +725,7 @@ const UpdateEmployee = ({
                         </p>
                       </div>
 
-                      <AlertDialogFooter className="sm:justify-start">
+                      <AlertDialogFooter className="items-center justify-start sm:justify-start flex-row">
                         <Button
                           type="submit"
                           className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"
@@ -720,10 +733,16 @@ const UpdateEmployee = ({
                           Assign Asset
                         </Button>
                         <AlertDialogCancel
+                          className="mt-0"
+                          asChild
                           onClick={() => assetsForm.reset()}
-                          className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent"
                         >
-                          Cancel
+                          <Button
+                            type="submit"
+                            className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent"
+                          >
+                            Cancel
+                          </Button>
                         </AlertDialogCancel>
                       </AlertDialogFooter>
                     </form>
@@ -732,7 +751,7 @@ const UpdateEmployee = ({
               </AlertDialog>
             </div>
           </main>
-          <footer className="flex px-14 items-center justify-start my-10">
+          <footer className="flex px-7 sm:px-14 items-center justify-start my-10">
             <Button
               type="submit"
               disabled={updateEmployeeLoading}

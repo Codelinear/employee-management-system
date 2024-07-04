@@ -39,7 +39,6 @@ import { useCompletion } from "ai/react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import Markdown from "react-markdown";
-import axios from "axios";
 import Header from "@/components/navbar";
 import CalendarIcon from "@/components/ui/calendar-icon";
 import {
@@ -150,7 +149,7 @@ const RelieveEmployee = () => {
   return (
     <main>
       {relieveLoading && (
-        <div className="h-screen w-screen absolute top-0 left-0 z-10 flex items-center justify-center bg-white">
+        <div className="h-screen w-screen fixed top-0 left-0 z-10 flex items-center justify-center bg-white">
           <h1 className="text-4xl text-center">Loading...</h1>
         </div>
       )}
@@ -158,16 +157,16 @@ const RelieveEmployee = () => {
       <Header />
       <hr />
 
-      <div className="border border-[#00000033] my-14 py-10 mx-48 rounded-lg">
+      <div className="border border-[#00000033] my-14 py-10 w-[85vw] md:w-[42rem] xl:w-auto mx-auto xl:mx-48 rounded-lg">
         <h1 className="text-2xl text-center font-bold text-gray-900">
           Relieve Employee
         </h1>
         <Form {...relieveDetailsForm}>
           <form
             onSubmit={relieveDetailsForm.handleSubmit(onSubmit)}
-            className="mx-auto max-w-[35rem] mt-10"
+            className="mx-auto w-[90%] md:max-w-[35rem] mt-10"
           >
-            <div className="flex mb-5">
+            <div className="flex md:flex-row flex-col max-md:gap-y-3 mb-5">
               <div className="w-full grid gap-3">
                 <FormField
                   control={relieveDetailsForm.control}
@@ -280,7 +279,7 @@ const RelieveEmployee = () => {
                 />
               </div>
 
-              <div className="w-full ml-14 grid gap-3">
+              <div className="w-full md:ml-14 grid gap-3">
                 <FormField
                   control={relieveDetailsForm.control}
                   name="employeeId"
@@ -409,7 +408,7 @@ const RelieveEmployee = () => {
             (relieveDetailsForm.getValues("reason") === "other" &&
               !manualReason) ? (
               <div
-                className={`flex transition-all justify-center ${
+                className={`flex transition-all max-[420px]:gap-y-3 min-[420px]:flex-row flex-col justify-center ${
                   relieveDetailsForm.getValues("reason") === "other"
                     ? "mt-20"
                     : "mt-12"
@@ -427,7 +426,7 @@ const RelieveEmployee = () => {
                     e.preventDefault();
                     router.push("/");
                   }}
-                  className="text-[12px] w-36 px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent ml-3"
+                  className="text-[12px] w-36 px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent min-[420px]:ml-3"
                 >
                   Clear form
                 </Button>
@@ -460,14 +459,14 @@ const RelieveEmployee = () => {
                   </Button>
                 </div>
 
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-sm:w-[90vw] lg:max-w-3xl">
                   <DialogHeader>
                     <DialogTitle className="text-2xl font-medium text-center">
                       Relieving letter
                     </DialogTitle>
                   </DialogHeader>
 
-                  <main className="my-5 w-full p-4 rounded-lg overflow-y-scroll scrollbar-hide h-[60vh] mx-auto">
+                  <main className="my-2 sm:my-5 w-full p-4 rounded-lg overflow-y-scroll scrollbar-hide h-[60vh] mx-auto">
                     {isLoading ? (
                       <SyncLoader
                         color="#636363"
@@ -480,11 +479,12 @@ const RelieveEmployee = () => {
                     )}
                   </main>
 
-                  <DialogFooter className="flex sm:justify-between">
+                  <DialogFooter>
                     <DialogClose asChild>
                       <Button
                         type="button"
                         onClick={onRelieve}
+                        disabled={isLoading || relieveLoading}
                         className="bg-[#D42B2B] hover:bg-[#D42B2B] text-[12px] px-6 py-3 h-auto rounded-lg"
                       >
                         Relieve
@@ -494,7 +494,8 @@ const RelieveEmployee = () => {
                     <DialogClose asChild>
                       <Button
                         type="button"
-                        className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent ml-3"
+                        disabled={relieveLoading}
+                        className="text-[12px] px-6 py-3 h-auto rounded-lg border text-black border-black bg-transparent hover:bg-transparent sm:ml-3"
                       >
                         Close
                       </Button>

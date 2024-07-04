@@ -70,7 +70,7 @@ const Login = () => {
     <main className="h-screen w-full bg-[#F5F5F5]">
       <Header />
       <hr />
-      <div className="mx-auto mt-[4rem] flex flex-col justify-center bg-white h-[62vh] w-[26rem] px-14">
+      <div className="mx-auto mt-[4rem] flex flex-col justify-center bg-white h-[62vh] w-[85vw] min-[480px]:w-[26rem] px-7 min-[480px]:px-14">
         <h1 className="text-xl font-bold text-center mb-7">Log In</h1>
         {isWrongCredentials && (
           <p className="bg-[#F1F1F1] rounded-md mb-3 p-2 text-center ml-auto w-2/3 text-[10px]">

@@ -107,7 +107,7 @@ const EmployeeDetails = ({
     <>
       <Header />
       <hr />
-      <main className="px-14 pt-10">
+      <main className="px-7 sm:px-14 pt-10">
         <div className="mb-5 flex items-center justify-start">
           <div
             className="cursor-pointer flex items-center justify-start"
@@ -118,12 +118,12 @@ const EmployeeDetails = ({
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-start sm:items-center lg:flex-row flex-col max-lg:gap-y-16">
           <div className="cursor-pointer">
             <ImagePlaceholder />
           </div>
 
-          <div className="ml-14 grid grid-cols-2 gap-x-14 gap-y-4 grid-rows-4">
+          <div className="sm:ml-14 grid grid-cols-1 sm:grid-cols-2 gap-x-14 gap-y-4 grid-rows-8 sm:grid-rows-4 max-lg:mb-10">
             <div>
               <p className="opacity-70 text-black text-xs">Employee name</p>
               <p className="text-xl">{currentEmployee.name}</p>
@@ -165,53 +165,57 @@ const EmployeeDetails = ({
           </div>
         </div>
 
-        <div className="my-8">
+        <div className="sm:my-8 mt-8 mb-14">
           <h2 className="text-2xl font-semibold mb-7">Assets owned</h2>
 
-          <div className="rounded-tl-lg rounded-tr-lg overflow-hidden">
-            <div className="text-[14px] text-[#000000B2] flex items-center">
-              <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
-                Slno.
+          <div className="w-full overflow-x-scroll min-[1080px]:overflow-x-auto [scrollbar-width:thin]">
+            <div className="rounded-tl-lg min-[1080px]:w-full w-[60rem] rounded-tr-lg overflow-hidden">
+              <div className="text-[14px] text-[#000000B2] flex items-center">
+                <div className="w-[2.9rem] py-[0.67rem] text-center bg-[#FCFCFC]">
+                  Slno.
+                </div>
+                <div className="w-[18rem] pl-[1rem] py-[0.67rem]">
+                  Asset name
+                </div>
+                <div className="py-[0.67rem] w-[10rem]">Asset ID</div>
+                <div className="py-[0.67rem]">Asset type</div>
               </div>
-              <div className="w-[18rem] pl-[1rem] py-[0.67rem]">Asset name</div>
-              <div className="py-[0.67rem] w-[10rem]">Asset ID</div>
-              <div className="py-[0.67rem]">Asset type</div>
-            </div>
-            <hr />
+              <hr />
 
-            {assetLoading
-              ? Array.from({ length: 4 }).map((_, index) => (
-                  <ListLoading key={uuidv4()} index={index} />
-                ))
-              : employeeAssets.map((asset, index) => (
-                  <>
-                    <div
-                      key={uuidv4()}
-                      className="text-[14px] flex items-center"
-                    >
-                      <div className="w-[2.9rem] text-[#000000B2] py-[0.67rem] text-center bg-[#FCFCFC]">
-                        {index < 10 ? `0${index + 1}` : `${index + 1}`}
+              {assetLoading
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <ListLoading key={uuidv4()} index={index} />
+                  ))
+                : employeeAssets.map((asset, index) => (
+                    <>
+                      <div
+                        key={uuidv4()}
+                        className="text-[14px] flex items-center"
+                      >
+                        <div className="w-[2.9rem] text-[#000000B2] py-[0.67rem] text-center bg-[#FCFCFC]">
+                          {index < 10 ? `0${index + 1}` : `${index + 1}`}
+                        </div>
+                        <div className="w-[18rem] text-black pl-[1rem] py-[0.67rem]">
+                          {asset.assetName}
+                        </div>
+                        <div className="py-[0.67rem] text-black w-[10rem]">
+                          {asset.assetId}
+                        </div>
+                        <div className="py-[0.67rem] text-black">
+                          {asset.assetType}
+                        </div>
                       </div>
-                      <div className="w-[18rem] text-black pl-[1rem] py-[0.67rem]">
-                        {asset.assetName}
-                      </div>
-                      <div className="py-[0.67rem] text-black w-[10rem]">
-                        {asset.assetId}
-                      </div>
-                      <div className="py-[0.67rem] text-black">
-                        {asset.assetType}
-                      </div>
-                    </div>
-                    <hr />
-                  </>
-                ))}
+                      <hr />
+                    </>
+                  ))}
+            </div>
           </div>
         </div>
 
         <div>
           <h2 className="text-2xl font-bold mb-7">Employee Documents</h2>
 
-          <div className="my-4 flex items-center">
+          <div className="my-4 flex sm:flex-row flex-col max-sm:gap-y-5 items-start sm:items-center">
             <div>
               <p className="opacity-70 mb-1 text-sm">PAN Card</p>
               <Button
@@ -225,7 +229,7 @@ const EmployeeDetails = ({
               </Button>
             </div>
 
-            <div className="mx-14">
+            <div className="sm:mx-14">
               <p className="opacity-70 mb-1 text-sm">Aadhaar Card</p>
               <Button
                 className={cn(
@@ -258,7 +262,7 @@ const EmployeeDetails = ({
         </div>
       </main>
 
-      <footer className="flex px-14 items-center justify-start my-10">
+      <footer className="flex max-md:gap-y-6 md:flex-row flex-col-reverse px-7 sm:px-14 md:items-center items-start justify-start my-10">
         <Button
           className="bg-[#182CE3] hover:bg-[#182CE3] px-6 py-3 h-auto rounded-lg text-[12px]"
           onClick={() => {
@@ -269,27 +273,31 @@ const EmployeeDetails = ({
           Close
         </Button>
 
-        <Button
-          type="button"
-          onClick={downloadReport}
-          className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-6 py-3 h-auto rounded-lg ml-10"
-        >
-          Download Report
-        </Button>
-        <Button
-          type="button"
-          onClick={() => setIsUpdateEmployee(true)}
-          className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-6 py-3 h-auto rounded-lg ml-3"
-        >
-          Update Details
-        </Button>
-        <Button
-          type="button"
-          onClick={() => router.push("/relieve")}
-          className="flex items-center text-[#C90000] bg-[#F8D1D1] hover:bg-[#F8D1D1] text-[12px] px-6 py-3 h-auto rounded-lg ml-3"
-        >
-          Relieve Employee
-        </Button>
+        <div className="flex flex-wrap items-center gap-3 md:gap-x-3">
+          <Button
+            type="button"
+            onClick={downloadReport}
+            className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-6 py-3 h-auto rounded-lg md:ml-10"
+          >
+            Download Report
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setIsUpdateEmployee(true)}
+            className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-6 py-3 h-auto rounded-lg"
+          >
+            Update Details
+          </Button>
+          {!currentEmployee.relieved && (
+            <Button
+              type="button"
+              onClick={() => router.push("/relieve")}
+              className="flex items-center text-[#C90000] bg-[#F8D1D1] hover:bg-[#F8D1D1] text-[12px] px-6 py-3 h-auto rounded-lg"
+            >
+              Relieve Employee
+            </Button>
+          )}
+        </div>
       </footer>
     </>
   );
