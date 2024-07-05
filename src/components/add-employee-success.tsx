@@ -6,39 +6,23 @@ import { Button } from "./ui/button";
 import { NextFont } from "next/dist/compiled/@next/font";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Asset } from "@/types";
+import {
+  Asset,
+  EmployeeDetailsForm,
+  AssetsForm as AssetsDetailsForm,
+} from "@/types";
 import { UseFormReturn } from "react-hook-form";
 
-type AssetsForm = UseFormReturn<{
-  assetId: string;
-  assetName: string;
-  assetType: string;
-  dateAssigned: Date;
-}, any, undefined>
+type AssetsForm = UseFormReturn<AssetsDetailsForm, any, undefined>;
 
-type UserDetailsForm = UseFormReturn<
-  {
-    name: string;
-    employeeId: string;
-    personalEmail: string;
-    companyEmail: string;
-    department: string;
-    phone: number;
-    currentRole: string;
-    joiningDate: Date;
-    panNumber: string;
-    aadhaarNumber: string;
-  },
-  any,
-  undefined
->;
+type UserDetailsForm = UseFormReturn<EmployeeDetailsForm, any, undefined>;
 
 const AddEmployeeSuccess = ({
   font,
   setAddEmployeeSuccess,
   setAssets,
   userDetailsForm,
-  assetsForm
+  assetsForm,
 }: {
   font: NextFont;
   setAddEmployeeSuccess: React.Dispatch<React.SetStateAction<boolean>>;

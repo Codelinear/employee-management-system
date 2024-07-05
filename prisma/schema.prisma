@@ -16,7 +16,7 @@ datasource db {
 model Assets {
   id           String    @id @default(auto()) @map("_id") @db.ObjectId
   ownerId      String    @db.ObjectId
-  owner        Employee? @relation(fields: [ownerId], references: [id])
+  owner        Employee? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   assetName    String
   assetId      String
   dateAssigned DateTime

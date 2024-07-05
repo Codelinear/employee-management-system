@@ -52,6 +52,7 @@ import ListLoading from "./list-loading";
 import CheckBoxChecked from "./ui/checkbox-checked";
 import CheckboxUnchecked from "./ui/checkbox-unchecked";
 import ImagePlaceholder from "./ui/image-placeholder";
+import { CalendarDatePicker } from "./calendar-date-picker";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -88,7 +89,10 @@ const UpdateEmployee = ({
       assetId: "",
       assetName: "",
       assetType: "",
-      dateAssigned: new Date(),
+      dateAssigned: {
+        to: new Date(),
+        from: new Date(),
+      },
     },
   });
 
@@ -128,6 +132,18 @@ const UpdateEmployee = ({
           return;
         }
 
+        const valuesArray = Object.values(values);
+
+        const fieldEmpty = valuesArray.some((value) => value === "");
+
+        if (fieldEmpty) {
+          toast({
+            variant: "destructive",
+            title: "You can't leave the field blank",
+          });
+          return;
+        }
+
         // Re calculating employeeId
         const employeeId = `${values.name
           .slice(0, 2)
@@ -157,6 +173,7 @@ const UpdateEmployee = ({
     },
     [
       setIsUpdateEmployee,
+      toast,
       updateEmployeeLoading,
       assets,
       currentEmployee,
@@ -199,7 +216,10 @@ const UpdateEmployee = ({
         .toString()
         .slice(7)}`;
 
-      setAssets((prev) => [...prev, { ...values, assetId }]);
+      setAssets((prev) => [
+        ...prev,
+        { ...values, dateAssigned: values.dateAssigned.from, assetId },
+      ]);
 
       setAlertOpen(false);
     },
@@ -222,7 +242,7 @@ const UpdateEmployee = ({
           {" "}
           <main className="px-7 sm:px-14 pt-12">
             <div className="flex xl:flex-row flex-col max-xl:gap-y-16 items-center lg:items-start">
-              <div className="cursor-pointer">
+              <div className="">
                 {/* <ImagePrompt /> */}
                 <ImagePlaceholder />
               </div>
@@ -258,7 +278,7 @@ const UpdateEmployee = ({
                             }))
                           }
                           className={cn(
-                            "placeholder:text-[#00000080] h-auto py-3 px-4",
+                            "placeholder:text-[#00000080] h-auto py-3 pr-12 pl-4",
                             !edit.name ? "cursor-pointer" : "cursor-auto",
                             inter.className
                           )}
@@ -301,7 +321,7 @@ const UpdateEmployee = ({
                           }
                           placeholder="Email Address"
                           className={cn(
-                            "placeholder:text-[#00000080] h-auto py-3 px-4",
+                            "placeholder:text-[#00000080] h-auto py-3 pr-12 pl-4",
                             !edit.companyEmail
                               ? "cursor-pointer"
                               : "cursor-auto",
@@ -346,7 +366,7 @@ const UpdateEmployee = ({
                           }
                           placeholder="Email Address"
                           className={cn(
-                            "placeholder:text-[#00000080] h-auto py-3 px-4",
+                            "placeholder:text-[#00000080] h-auto py-3 pr-12 pl-4",
                             !edit.personalEmail
                               ? "cursor-pointer"
                               : "cursor-auto",
@@ -541,7 +561,7 @@ const UpdateEmployee = ({
                 <AlertDialogTrigger asChild>
                   <Button
                     type="button"
-                    disabled={updateEmployeeLoading}
+                    disabled={updateEmployeeLoading || assetLoading}
                     className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-4 py-3 mt-4 h-auto rounded-lg"
                   >
                     <Plus />
@@ -655,74 +675,56 @@ const UpdateEmployee = ({
                           control={assetsForm.control}
                           name="dateAssigned"
                           render={({ field }) => (
-                            <FormItem className="flex flex-col">
+                            <FormItem className="relative flex flex-col">
+                              <div className="mt-1 mb-8 absolute left-0 top-full translate-y-2 flex items-center">
+                                {useTodayDate ? (
+                                  <div onClick={() => setUseTodayDate(false)}>
+                                    <CheckBoxChecked />
+                                  </div>
+                                ) : (
+                                  <div
+                                    onClick={() => {
+                                      assetsForm.setValue("dateAssigned", {
+                                        from: new Date(),
+                                        to: new Date(),
+                                      });
+                                      setUseTodayDate(true);
+                                    }}
+                                  >
+                                    <CheckboxUnchecked />
+                                  </div>
+                                )}
+                                <p
+                                  onClick={() =>
+                                    setUseTodayDate((prev) => !prev)
+                                  }
+                                  className="text-sm ml-1.5 cursor-pointer"
+                                >
+                                  Use today&apos;s date
+                                </p>
+                              </div>
                               <FormLabel className="opacity-70 text-sm block">
                                 Date Assigned
                               </FormLabel>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant={"outline"}
-                                      disabled={useTodayDate}
-                                      className={cn(
-                                        "w-60 mt-2 pl-5 flex items-center justify-between",
-                                        inter.className
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        format(field.value, "dd / MM / yyyy")
-                                      ) : (
-                                        <span>Pick a date</span>
-                                      )}
-                                      <CalendarIcon />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-auto p-0"
-                                  align="start"
-                                >
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    className={inter.className}
-                                    disabled={(date) =>
-                                      date > new Date() ||
-                                      date < new Date("1900-01-01")
-                                    }
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
+                              <FormControl>
+                                <CalendarDatePicker
+                                  date={field.value}
+                                  disabled={useTodayDate}
+                                  onDateSelect={({ from, to }) => {
+                                    assetsForm.setValue("dateAssigned", {
+                                      from,
+                                      to,
+                                    });
+                                  }}
+                                  numberOfMonths={1}
+                                  className={cn(
+                                    "w-60 bg-transparent hover:bg-transparent text-black mt-2 h-auto py-3 px-4 flex items-center justify-between"
+                                  )}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
-                      </div>
-
-                      <div className="mt-1 mb-8 flex items-center">
-                        {useTodayDate ? (
-                          <div onClick={() => setUseTodayDate(false)}>
-                            <CheckBoxChecked />
-                          </div>
-                        ) : (
-                          <div
-                            onClick={() => {
-                              assetsForm.setValue("dateAssigned", new Date());
-
-                              setUseTodayDate(true);
-                            }}
-                          >
-                            <CheckboxUnchecked />
-                          </div>
-                        )}
-                        <p
-                          onClick={() => setUseTodayDate((prev) => !prev)}
-                          className="text-sm ml-1.5 cursor-pointer"
-                        >
-                          Use today&apos;s date
-                        </p>
                       </div>
 
                       <AlertDialogFooter className="items-center justify-start sm:justify-start flex-row">
@@ -754,7 +756,7 @@ const UpdateEmployee = ({
           <footer className="flex px-7 sm:px-14 items-center justify-start my-10">
             <Button
               type="submit"
-              disabled={updateEmployeeLoading}
+              disabled={updateEmployeeLoading || assetLoading}
               className="bg-[#182CE3] hover:bg-[#182CE3] text-[12px] px-6 py-3 h-auto rounded-lg"
             >
               {updateEmployeeLoading ? "Saving..." : "Save Changes"}

@@ -126,39 +126,39 @@ const EmployeeDetails = ({
           <div className="sm:ml-14 grid grid-cols-1 sm:grid-cols-2 gap-x-14 gap-y-4 grid-rows-8 sm:grid-rows-4 max-lg:mb-10">
             <div>
               <p className="opacity-70 text-black text-xs">Employee name</p>
-              <p className="text-xl">{currentEmployee.name}</p>
+              <p className="text-lg">{currentEmployee.name}</p>
             </div>
             <div>
               <p className="opacity-70 text-black text-xs">Employee ID</p>
-              <p className="text-xl">{currentEmployee.employeeId}</p>
+              <p className="text-lg">{currentEmployee.employeeId}</p>
             </div>
             <div>
               <p className="opacity-70 text-black text-xs">
                 Company Email Address
               </p>
-              <p className="text-xl">{currentEmployee.companyEmail}</p>
+              <p className="text-lg">{currentEmployee.companyEmail}</p>
             </div>
             <div>
               <p className="opacity-70 text-black text-xs">
                 Personal Email Address
               </p>
-              <p className="text-xl">{currentEmployee.personalEmail}</p>
+              <p className="text-lg">{currentEmployee.personalEmail}</p>
             </div>
             <div>
               <p className="opacity-70 text-black text-xs">Department</p>
-              <p className="text-xl">{currentEmployee.department}</p>
+              <p className="text-lg">{currentEmployee.department}</p>
             </div>
             <div>
               <p className="opacity-70 text-black text-xs">Phone number</p>
-              <p className="text-xl">{currentEmployee.phone}</p>
+              <p className="text-lg">{currentEmployee.phone}</p>
             </div>
             <div>
               <p className="opacity-70 text-black text-xs">Current role</p>
-              <p className="text-xl">{currentEmployee.currentRole}</p>
+              <p className="text-lg">{currentEmployee.currentRole}</p>
             </div>
             <div>
               <p className="opacity-70 text-black text-xs">Employed years</p>
-              <p className="text-xl">
+              <p className="text-lg">
                 {employedYears.current || "Less than a year"}
               </p>
             </div>
@@ -277,12 +277,14 @@ const EmployeeDetails = ({
           <Button
             type="button"
             onClick={downloadReport}
+            disabled={assetLoading}
             className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-6 py-3 h-auto rounded-lg md:ml-10"
           >
             Download Report
           </Button>
           <Button
             type="button"
+            disabled={assetLoading}
             onClick={() => setIsUpdateEmployee(true)}
             className="flex items-center border text-black border-black bg-transparent hover:bg-transparent text-[12px] px-6 py-3 h-auto rounded-lg"
           >

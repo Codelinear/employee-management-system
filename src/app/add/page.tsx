@@ -40,13 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import CalendarIcon from "@/components/ui/calendar-icon";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Asset } from "@/types";
@@ -54,6 +47,7 @@ import { useAuthenticate } from "@/lib/hooks/useAuthenticate";
 import CheckBoxChecked from "@/components/ui/checkbox-checked";
 import CheckboxUnchecked from "@/components/ui/checkbox-unchecked";
 import ImagePlaceholder from "@/components/ui/image-placeholder";
+import { CalendarDatePicker } from "@/components/calendar-date-picker";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -70,16 +64,16 @@ export default function AddEmployee() {
     resume: null,
   });
   const [addEmployeeLoading, setAddEmployeeLoading] = useState(false);
-  const [joiningDays, setJoiningDays] = useState("");
-  const [joiningMonths, setJoiningMonths] = useState("");
-  const [joiningYears, setJoiningYears] = useState("");
 
   const assetsForm = useForm<AssetsForm>({
     defaultValues: {
       assetId: "",
       assetName: "",
       assetType: "",
-      dateAssigned: new Date(),
+      dateAssigned: {
+        from: new Date(),
+        to: new Date(),
+      },
     },
   });
 
@@ -92,7 +86,10 @@ export default function AddEmployee() {
       department: "",
       phone: undefined,
       currentRole: "",
-      joiningDate: new Date(),
+      joiningDate: {
+        from: new Date(),
+        to: new Date(),
+      },
       panNumber: "",
       aadhaarNumber: "",
     },
@@ -104,6 +101,33 @@ export default function AddEmployee() {
 
   const onAddEmployeeSubmit = useCallback(
     async (values: EmployeeDetailsForm) => {
+      if (!values.department || !values.currentRole) {
+        toast({
+          variant: "destructive",
+          title: "Please fill all the fields",
+        });
+        return;
+      }
+
+      console.log(/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(values.panNumber))
+      console.log(/[0-9]{12}/g.test(values.aadhaarNumber))
+      
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(values.panNumber)) {
+        toast({
+          variant: "destructive",
+          title: "Incorrect format of PAN number",
+        });
+        return;
+      }
+
+      if (!/[0-9]{12}/g.test(values.aadhaarNumber)) {
+        toast({
+          variant: "destructive",
+          title: "Aadhaar number is not valid",
+        });
+        return;
+      }
+
       setAddEmployeeLoading(true);
 
       const employeeId = `${values.name
@@ -113,7 +137,7 @@ export default function AddEmployee() {
         .toUpperCase()}${values.department
         .slice(0, 1)
         .toUpperCase()}${values.phone.toString().slice(8)}${format(
-        values.joiningDate,
+        values.joiningDate.from,
         "dd / MM / yyyy"
       ).slice(0, 2)}${values.panNumber.slice(0, 2)}${values.aadhaarNumber.slice(
         0,
@@ -125,6 +149,7 @@ export default function AddEmployee() {
           assets,
           employee: {
             ...values,
+            joiningDate: values.joiningDate.from,
             employeeId,
             panNumber: values.panNumber,
             aadhaarNumber: values.aadhaarNumber,
@@ -132,12 +157,13 @@ export default function AddEmployee() {
         });
 
         setAddEmployeeSuccess(true);
-      } catch (error) {
+      } catch (error: any) {
+        toast({ variant: "destructive", title: error.response.data.message });
       } finally {
         setAddEmployeeLoading(false);
       }
     },
-    [assets]
+    [assets, toast]
   );
 
   const onDeleteAsset = useCallback((assetId: string) => {
@@ -173,7 +199,10 @@ export default function AddEmployee() {
         .toString()
         .slice(7)}`;
 
-      setAssets((prev) => [...prev, { ...values, assetId }]);
+      setAssets((prev) => [
+        ...prev,
+        { ...values, dateAssigned: values.dateAssigned.from, assetId },
+      ]);
 
       setAlertOpen(false);
       assetsForm.reset();
@@ -185,7 +214,9 @@ export default function AddEmployee() {
     <>
       {addEmployeeLoading && (
         <div className="h-screen w-full fixed backdrop-blur-3xl top-0 left-0 z-50 flex items-center justify-center">
-          <h1 className="text-4xl text-center mx-5">Adding employee... Please wait.</h1>
+          <h1 className="text-4xl text-center mx-5">
+            Adding employee... Please wait.
+          </h1>
         </div>
       )}
       <Header />
@@ -204,7 +235,7 @@ export default function AddEmployee() {
             {" "}
             <main className="px-7 sm:px-14 pt-12">
               <div className="flex lg:flex-row flex-col max-lg:gap-y-16 items-center lg:items-start">
-                <div className="cursor-pointer">
+                <div className="">
                   {/* <ImagePrompt /> */}
                   <ImagePlaceholder />
                 </div>
@@ -387,10 +418,25 @@ export default function AddEmployee() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Joining date</FormLabel>
-                        <Popover>
+                        <FormControl>
+                          <CalendarDatePicker
+                            date={field.value}
+                            onDateSelect={({ from, to }) => {
+                              userDetailsForm.setValue("joiningDate", {
+                                from,
+                                to,
+                              });
+                            }}
+                            numberOfMonths={1}
+                            className={cn(
+                              "w-full bg-transparent hover:bg-transparent text-black mt-2 h-auto py-3 px-4 flex items-center justify-between"
+                            )}
+                          />
+                        </FormControl>
+                        {/* <Popover>
                           <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
+                            <FormControl> */}
+                        {/* <Button
                                 variant={"outline"}
                                 className={cn(
                                   "w-full mt-2 h-auto py-3 px-4 flex items-center justify-between",
@@ -405,9 +451,9 @@ export default function AddEmployee() {
                                   </span>
                                 )}
                                 <CalendarIcon />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
+                              </Button> */}
+                        {/* </FormControl> */}
+                        {/* </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
@@ -421,7 +467,7 @@ export default function AddEmployee() {
                               initialFocus
                             />
                           </PopoverContent>
-                        </Popover>
+                        </Popover> */}
                       </FormItem>
                     )}
                   />
@@ -606,7 +652,15 @@ export default function AddEmployee() {
                                       <CheckBoxChecked />
                                     </div>
                                   ) : (
-                                    <div onClick={() => setUseTodayDate(true)}>
+                                    <div
+                                      onClick={() => {
+                                        assetsForm.setValue("dateAssigned", {
+                                          from: new Date(),
+                                          to: new Date(),
+                                        });
+                                        setUseTodayDate(true);
+                                      }}
+                                    >
                                       <CheckboxUnchecked />
                                     </div>
                                   )}
@@ -623,7 +677,23 @@ export default function AddEmployee() {
                                 <FormLabel className="opacity-70 text-sm block">
                                   Date Assigned
                                 </FormLabel>
-                                <Popover>
+                                <FormControl>
+                                  <CalendarDatePicker
+                                    date={field.value}
+                                    disabled={useTodayDate}
+                                    onDateSelect={({ from, to }) => {
+                                      assetsForm.setValue("dateAssigned", {
+                                        from,
+                                        to,
+                                      });
+                                    }}
+                                    numberOfMonths={1}
+                                    className={cn(
+                                      "w-60 bg-transparent hover:bg-transparent text-black mt-2 h-auto py-3 px-4 flex items-center justify-between"
+                                    )}
+                                  />
+                                </FormControl>
+                                {/* <Popover>
                                   <PopoverTrigger asChild>
                                     <FormControl>
                                       <Button
@@ -659,7 +729,7 @@ export default function AddEmployee() {
                                       initialFocus
                                     />
                                   </PopoverContent>
-                                </Popover>
+                                </Popover> */}
                               </FormItem>
                             )}
                           />

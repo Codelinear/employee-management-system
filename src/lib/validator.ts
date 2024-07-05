@@ -9,7 +9,10 @@ export const employeeDetailsSchema = z.object({
   department: z.string(),
   phone: z.number(),
   currentRole: z.string(),
-  joiningDate: z.date(),
+  joiningDate: z.object({
+    from: z.date(),
+    to: z.date(),
+  }),
   panNumber: z.string(),
   aadhaarNumber: z.string(),
 });
@@ -38,7 +41,10 @@ export const assetsSchema = z.object({
   assetId: z.string(),
   assetName: z.string(),
   assetType: z.string(),
-  dateAssigned: z.date(),
+  dateAssigned: z.object({
+    from: z.date(),
+    to: z.date(),
+  }),
 });
 
 export const loginSchema = z.object({

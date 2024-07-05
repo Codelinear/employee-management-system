@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Separator } from "./ui/separator";
 import Cross from "./ui/cross";
 import { departmentsObject, roleObject, experienceObject } from "@/constants";
-import {
+import type {
   Department,
   EmployeeDetails,
   Experience,
@@ -173,7 +173,7 @@ const FilterOverlay = ({
               <span>Filter by Department</span>
               <div
                 onClick={() => setIsFilter(false)}
-                className="relative -translate-y-2 rounded-lg p-3 bg-[#EAEAEA]"
+                className="relative -translate-y-2 md:hidden rounded-lg p-3 bg-[#EAEAEA]"
               >
                 <Cross stroke="#000" />
               </div>

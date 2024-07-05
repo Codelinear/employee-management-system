@@ -98,9 +98,19 @@ const Home = () => {
       const { departmentFilters, experienceFilters, roleFilters } = filters;
 
       if (isRelievedChecked) {
-        const relievedEmployees = employees.filter(
-          (employee) => employee.relieved
-        );
+        let relievedEmployees;
+
+        if (filteredEmployees.length) {
+          relievedEmployees = filteredEmployees.filter(
+            (employee) => employee.relieved
+          );
+        } else {
+          relievedEmployees = employees.filter((employee) => employee.relieved);
+        }
+
+        if (!relievedEmployees.length) {
+          setSearchNotFound(true);
+        }
 
         setFilteredEmployees(relievedEmployees);
         setSearchedEmployees([]);
@@ -165,7 +175,7 @@ const Home = () => {
       setSearchedEmployees([]);
       setIsFilter(false);
     },
-    [employees, isRelievedChecked]
+    [employees, isRelievedChecked, filteredEmployees]
   );
 
   const viewDetails = useCallback(
@@ -328,7 +338,19 @@ const Home = () => {
 
   if (searchNotFound) {
     employeesListRef.current = (
-      <SearchNotFound font={inter} setSearchNotFound={setSearchNotFound} />
+      <SearchNotFound
+        setSearchNotFound={setSearchNotFound}
+        setIsRelievedChecked={setIsRelievedChecked}
+        setFilteredEmployees={setFilteredEmployees}
+        setIsFilter={setIsFilter}
+        setDepartment={setDepartment}
+        setRole={setRole}
+        setExperience={setExperience}
+        setDepartmentFilters={setDepartmentFilters}
+        setExperienceFilters={setExperienceFilters}
+        setRoleFilters={setRoleFilters}
+        font={inter}
+      />
     );
   } else if (isLoading || employees.length || searchedEmployees.length) {
     let employeesList;
