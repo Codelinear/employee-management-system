@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useStore } from "@/store";
 import { Input } from "@/components/ui/input";
 import { SyncLoader } from "react-spinners";
@@ -65,6 +65,8 @@ const RelieveEmployee = () => {
 
   const { toast } = useToast();
 
+  const markdownRef = useRef<HTMLDivElement>(null);
+
   const { completion, complete, isLoading } = useCompletion({
     api: "/api/ai/relieve/write",
   });
@@ -103,6 +105,7 @@ const RelieveEmployee = () => {
         toast({
           variant: "destructive",
           title: "Please consider all the fields.",
+          duration: 2000,
         });
 
         return;
@@ -122,34 +125,40 @@ const RelieveEmployee = () => {
   );
 
   const onRelieve = useCallback(async () => {
-    try {
-      setRelieveLoading(true);
+    setRelieveLoading(true);
 
-      const message = await relieveEmployee(
-        currentEmployee?.employeeId ||
-          relieveDetailsForm.getValues("employeeId")
-      );
+    if (!currentEmployee?.companyEmail || !markdownRef.current?.innerHTML) {
+      return;
+    }
 
+    const res = await relieveEmployee(
+      currentEmployee?.employeeId || relieveDetailsForm.getValues("employeeId"),
+      markdownRef.current?.innerHTML,
+      currentEmployee?.companyEmail!
+    );
+
+    if ("error" in res) {
       toast({
-        description: message,
+        variant: "destructive",
+        description: res.error,
+        duration: 2000,
+      });
+    } else {
+      toast({
+        description: res.message,
+        duration: 2000,
       });
 
       router.push("/");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error occured",
-        description: "There is some error while relieving the employee",
-      });
-    } finally {
-      setRelieveLoading(false);
     }
+
+    setRelieveLoading(false);
   }, [currentEmployee, relieveDetailsForm, toast, router]);
 
   return (
     <main>
       {relieveLoading && (
-        <div className="h-screen w-screen fixed top-0 left-0 z-10 flex items-center justify-center bg-white">
+        <div className="h-screen w-screen fixed top-0 left-0 z-50 flex items-center justify-center bg-white">
           <h1 className="text-4xl text-center">Loading...</h1>
         </div>
       )}
@@ -475,7 +484,9 @@ const RelieveEmployee = () => {
                         speedMultiplier={0.7}
                       />
                     ) : (
-                      <Markdown>{completion}</Markdown>
+                      <div ref={markdownRef}>
+                        <Markdown>{completion}</Markdown>
+                      </div>
                     )}
                   </main>
 

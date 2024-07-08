@@ -34,6 +34,7 @@ import {
   Role,
 } from "@/types";
 import { departmentsObject, roleObject, experienceObject } from "@/constants";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -365,7 +366,7 @@ const Home = () => {
 
     employeesListRef.current = (
       <div className="max-lg:overflow-x-scroll [scrollbar-width:thin] w-full">
-        <section className="rounded-lg w-[77.8rem] min-[1360px]:w-full overflow-y-scroll max-h-[62vh] [scrollbar-width:thin]">
+        <section className="rounded-lg w-[77.8rem] min-[1360px]:w-full overflow-y-auto max-h-[62vh] [scrollbar-width:thin]">
           <div className="text-[13px] text-[#000000B2] flex items-center">
             <div className="w-[2.9rem] text-[12px] py-[0.67rem] text-center bg-[#FCFCFC]">
               Slno.
@@ -427,16 +428,21 @@ const Home = () => {
     );
   } else if (!employees.length && !searchedEmployees.length) {
     employeesListRef.current = (
-      <section className="flex items-center justify-center h-[63.5vh]">
+      <section className="flex flex-col items-center justify-center h-[63.5vh]">
         {" "}
         <h1
           className={cn(
-            "text-5xl text-[#000000B2] text-center font-medium",
+            "text-5xl text-[#000000B2] mb-6 text-center font-medium",
             inter.className
           )}
         >
-          Add an employee
+          No employees found!
         </h1>
+        <Link href="/add">
+          <Button className={"bg-[#182CE3] hover:bg-[#182CE3]"}>
+            Add Employee
+          </Button>
+        </Link>{" "}
       </section>
     );
   }

@@ -15,7 +15,7 @@ import { Inter } from "next/font/google";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { departments, designations } from "@/constants/array";
 import Plus from "@/components/ui/plus";
 import DeleteIcon from "@/components/ui/delete-icon";
@@ -48,6 +48,7 @@ import CheckBoxChecked from "@/components/ui/checkbox-checked";
 import CheckboxUnchecked from "@/components/ui/checkbox-unchecked";
 import ImagePlaceholder from "@/components/ui/image-placeholder";
 import { CalendarDatePicker } from "@/components/calendar-date-picker";
+import Cross from "@/components/ui/cross";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -58,12 +59,15 @@ export default function AddEmployee() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [useTodayDate, setUseTodayDate] = useState(true);
   const [addEmployeeSuccess, setAddEmployeeSuccess] = useState(false);
-  const [documentsFile, setDocumentsFile] = useState({
-    panPhoto: null,
-    aadhaarPhoto: null,
-    resume: null,
-  });
   const [addEmployeeLoading, setAddEmployeeLoading] = useState(false);
+  const [panError, setPanError] = useState(false);
+  const [aadhaarError, setAadhaarError] = useState(false);
+  const [resumeError, setResumeError] = useState(false);
+  const [documents, setDocuments] = useState({
+    aadhaarPhoto: null,
+    panPhoto: null,
+    resumePhoto: null,
+  });
 
   const assetsForm = useForm<AssetsForm>({
     defaultValues: {
@@ -99,23 +103,26 @@ export default function AddEmployee() {
 
   const router = useRouter();
 
+  const panPhotoRef = useRef<HTMLInputElement | null>(null);
+  const aadhaarPhotoRef = useRef<HTMLInputElement | null>(null);
+  const resumePhotoRef = useRef<HTMLInputElement | null>(null);
+
   const onAddEmployeeSubmit = useCallback(
     async (values: EmployeeDetailsForm) => {
       if (!values.department || !values.currentRole) {
         toast({
           variant: "destructive",
           title: "Please fill all the fields",
+          duration: 2000,
         });
         return;
       }
 
-      console.log(/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(values.panNumber))
-      console.log(/[0-9]{12}/g.test(values.aadhaarNumber))
-      
       if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(values.panNumber)) {
         toast({
           variant: "destructive",
           title: "Incorrect format of PAN number",
+          duration: 2000,
         });
         return;
       }
@@ -124,6 +131,16 @@ export default function AddEmployee() {
         toast({
           variant: "destructive",
           title: "Aadhaar number is not valid",
+          duration: 2000,
+        });
+        return;
+      }
+
+      if (!documents.resumePhoto) {
+        toast({
+          variant: "destructive",
+          title: "Resume is required",
+          duration: 2000,
         });
         return;
       }
@@ -144,31 +161,66 @@ export default function AddEmployee() {
         2
       )}`;
 
+      const formData = new FormData();
+
+      const employee = {
+        ...values,
+        joiningDate: values.joiningDate.from,
+        employeeId,
+      };
+
+      const data = {
+        employee,
+        assets,
+      };
+
+      formData.append("data", JSON.stringify(data));
+      formData.append("resumePhoto", documents.resumePhoto);
+      formData.append("panPhoto", documents.panPhoto || "");
+      formData.append("aadhaarPhoto", documents.aadhaarPhoto || "");
+
       try {
-        await axios.post("/api/employee/add", {
-          assets,
-          employee: {
-            ...values,
-            joiningDate: values.joiningDate.from,
-            employeeId,
-            panNumber: values.panNumber,
-            aadhaarNumber: values.aadhaarNumber,
-          },
-        });
+        await axios.post("/api/employee/add", formData);
 
         setAddEmployeeSuccess(true);
       } catch (error: any) {
-        toast({ variant: "destructive", title: error.response.data.message });
+        toast({
+          variant: "destructive",
+          title: error.response.data.message,
+          duration: 2000,
+        });
       } finally {
         setAddEmployeeLoading(false);
+        if (panPhotoRef.current) {
+          panPhotoRef.current.value = "";
+        }
+        if (aadhaarPhotoRef.current) {
+          aadhaarPhotoRef.current.value = "";
+        }
+        if (resumePhotoRef.current) {
+          resumePhotoRef.current.value = "";
+        }
+        setDocuments((prev) => ({
+          ...prev,
+          panPhoto: null,
+          aadhaarPhoto: null,
+          resumePhoto: null,
+        }));
       }
     },
-    [assets, toast]
+    [assets, toast, documents]
   );
 
   const onDeleteAsset = useCallback((assetId: string) => {
     setAssets((prev) => prev.filter((element) => element.assetId !== assetId));
   }, []);
+
+  const fileInputHandler = useCallback(
+    (type: "aadhaarPhoto" | "panPhoto" | "resumePhoto", file: File) => {
+      setDocuments((prev) => ({ ...prev, [type]: file }));
+    },
+    []
+  );
 
   const onAssetSubmit = useCallback(
     (values: AssetsForm) => {
@@ -187,6 +239,7 @@ export default function AddEmployee() {
         toast({
           variant: "destructive",
           title: "Asset already added",
+          duration: 2000,
         });
         return;
       }
@@ -768,8 +821,8 @@ export default function AddEmployee() {
                   Employee Documents
                 </h2>
 
-                <div className="flex sm:flex-row flex-col items-start max-sm:gap-y-5 sm:items-center">
-                  <div className="flex items-center">
+                <div className="flex lg:flex-row flex-col items-start gap-x-8 gap-y-5 lg:gap-y-0 lg:items-center">
+                  <div className="flex gap-x-3 sm:flex-row flex-col items-start max-sm:gap-y-5 sm:items-center">
                     <FormField
                       control={userDetailsForm.control}
                       name="panNumber"
@@ -791,29 +844,130 @@ export default function AddEmployee() {
                         </FormItem>
                       )}
                     />
-                    {/* <div className="ml-3">
-                      <label htmlFor="pan-photo" className="text-sm mb-1">
+                    {/* <FormField
+                      control={userDetailsForm.control}
+                      name="panPhoto"
+                      render={() => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-sm">
+                            Pan Card Photo. 2 MB
+                          </FormLabel>
+                          <FormControl>
+                            <>
+                              <Button
+                                type="button"
+                                className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4"
+                                onClick={() => panPhotoRef.current?.click()}
+                              >
+                                <span className="mr-4">Upload photo</span>
+                                <Upload />
+                              </Button>
+
+                              <input
+                                ref={panPhotoRef}
+                                type="file"
+                                onChange={(e) => {
+                                  const files = e.target.files;
+
+                                  if (!files) {
+                                    return;
+                                  }
+
+                                  fileInputHandler("panPhoto", files[0]);
+                                }}
+                                accept="image/png, image/jpeg, image/jpg"
+                                hidden
+                              />
+                            </>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    /> */}
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="pan-photo"
+                        className={`text-sm ${
+                          panError ? "text-[#C71414]" : ""
+                        }`}
+                      >
                         PAN Card Photo. 2 MB
                       </label>
 
-                      <Button
-                        type="button"
-                        className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4"
-                      >
-                        <span className="mr-4">Upload photo</span>
-                        <Upload />
-                      </Button>
-                    </div>{" "} */}
+                      {panPhotoRef.current?.value || documents.panPhoto ? (
+                        <div className="flex gap-x-2">
+                          <Button
+                            type="button"
+                            className="rounded-md text-black bg-[#C1F6D0] hover:bg-[#C1F6D0] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4 cursor-auto text-center"
+                          >
+                            <span className="mr-4">Uploaded!</span>
+                          </Button>
+
+                          <Button
+                            type="button"
+                            className="rounded-md text-black bg-[#F9D8D8] hover:bg-[#F9D8D8] flex items-center outline-none text-sm h-auto w-12"
+                            onClick={() => {
+                              if (panPhotoRef.current) {
+                                panPhotoRef.current.value = "";
+                                setDocuments((prev) => ({
+                                  ...prev,
+                                  panPhoto: null,
+                                }));
+                              }
+                            }}
+                          >
+                            <Cross stroke="#C90000" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          <Button
+                            type="button"
+                            className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4"
+                            onClick={() => panPhotoRef.current?.click()}
+                          >
+                            <span className="mr-4">Upload photo</span>
+                            <Upload />
+                          </Button>
+                        </div>
+                      )}
+
+                      <input
+                        ref={panPhotoRef}
+                        id="pan-photo"
+                        type="file"
+                        onChange={(e) => {
+                          const files = e.target.files;
+
+                          if (!files) {
+                            return;
+                          }
+
+                          const fileSizeInBytes = files[0].size;
+                          const fileSizeInKB = fileSizeInBytes / 1024;
+                          const fileSizeInMB = fileSizeInKB / 1024;
+
+                          if (fileSizeInMB > 2) {
+                            setPanError(true);
+                            e.target.value = "";
+                            return;
+                          }
+
+                          fileInputHandler("panPhoto", files[0]);
+                        }}
+                        accept="image/png, image/jpeg, image/jpg"
+                        hidden
+                      />
+                    </div>{" "}
                   </div>
 
-                  <div className="flex items-center sm:mx-8">
+                  <div className="flex sm:flex-row flex-col items-start max-sm:gap-y-5 sm:items-center gap-x-3">
                     <FormField
                       control={userDetailsForm.control}
                       name="aadhaarNumber"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
                           <FormLabel className="text-sm">
-                            Aadhaar Card
+                            Aadhaar Card Number
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -828,27 +982,160 @@ export default function AddEmployee() {
                         </FormItem>
                       )}
                     />
-                    {/* <div className="ml-3">
-                      <label htmlFor="pan-photo" className="text-sm mb-1">
-                        Aadhaar Card Photo. 2 MB
+
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="aadhaar-photo"
+                        className={`text-sm ${
+                          aadhaarError ? "text-[#C71414]" : ""
+                        }`}
+                      >
+                        Aadhaar Photo. 2 MB
                       </label>
 
-                      <Button className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4">
-                        <span className="mr-4">Upload photo</span>
-                        <Upload />
-                      </Button>
-                    </div>{" "} */}
+                      {aadhaarPhotoRef.current?.value ||
+                      documents.aadhaarPhoto ? (
+                        <div className="flex gap-x-2">
+                          <Button
+                            type="button"
+                            className="rounded-md text-black bg-[#C1F6D0] hover:bg-[#C1F6D0] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4 cursor-auto text-center"
+                          >
+                            <span className="mr-4">Uploaded!</span>
+                          </Button>
+
+                          <Button
+                            type="button"
+                            className="rounded-md text-black bg-[#F9D8D8] hover:bg-[#F9D8D8] flex items-center outline-none text-sm h-auto w-12"
+                            onClick={() => {
+                              if (aadhaarPhotoRef.current) {
+                                aadhaarPhotoRef.current.value = "";
+                                setDocuments((prev) => ({
+                                  ...prev,
+                                  aadhaarPhoto: null,
+                                }));
+                              }
+                            }}
+                          >
+                            <Cross stroke="#C90000" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          <Button
+                            type="button"
+                            className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4"
+                            onClick={() => aadhaarPhotoRef.current?.click()}
+                          >
+                            <span className="mr-4">Upload photo</span>
+                            <Upload />
+                          </Button>
+                        </div>
+                      )}
+
+                      <input
+                        ref={aadhaarPhotoRef}
+                        id="aadhaar-photo"
+                        type="file"
+                        onChange={(e) => {
+                          const files = e.target.files;
+
+                          if (!files) {
+                            return;
+                          }
+
+                          const fileSizeInBytes = files[0].size;
+                          const fileSizeInKB = fileSizeInBytes / 1024;
+                          const fileSizeInMB = fileSizeInKB / 1024;
+
+                          if (fileSizeInMB > 2) {
+                            setAadhaarError(true);
+                            e.target.value = "";
+                            return;
+                          }
+
+                          fileInputHandler("aadhaarPhoto", files[0]);
+                        }}
+                        accept="image/png, image/jpeg, image/jpg"
+                        hidden
+                      />
+                    </div>
                   </div>
-                  {/* <div>
-                    <label htmlFor="pan-photo" className="text-sm mb-1">
+
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="resume-photo"
+                      className={`text-sm ${
+                        resumeError ? "text-[#C71414]" : ""
+                      }`}
+                    >
                       Resume. 2 MB
                     </label>
 
-                    <Button className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4">
-                      <span className="mr-4">Upload photo</span>
-                      <Upload />
-                    </Button>
-                  </div> */}
+                    {resumePhotoRef.current?.value || documents.resumePhoto ? (
+                      <div className="flex gap-x-2">
+                        <Button
+                          type="button"
+                          className="rounded-md text-black bg-[#C1F6D0] hover:bg-[#C1F6D0] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4 cursor-auto text-center"
+                        >
+                          <span className="mr-4">Uploaded!</span>
+                        </Button>
+
+                        <Button
+                          type="button"
+                          className="rounded-md text-black bg-[#F9D8D8] hover:bg-[#F9D8D8] flex items-center outline-none text-sm h-auto w-12"
+                          onClick={() => {
+                            if (resumePhotoRef.current) {
+                              resumePhotoRef.current.value = "";
+                              setDocuments((prev) => ({
+                                ...prev,
+                                resumePhoto: null,
+                              }));
+                            }
+                          }}
+                        >
+                          <Cross stroke="#C90000" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <Button
+                          type="button"
+                          className="rounded-md text-black bg-[#EAEAEA] hover:bg-[#EAEAEA] flex items-center outline-none text-sm h-auto py-[0.95rem] px-4"
+                          onClick={() => resumePhotoRef.current?.click()}
+                        >
+                          <span className="mr-4">Upload photo</span>
+                          <Upload />
+                        </Button>
+                      </div>
+                    )}
+
+                    <input
+                      ref={resumePhotoRef}
+                      id="resume-photo"
+                      type="file"
+                      onChange={(e) => {
+                        const files = e.target.files;
+
+                        if (!files) {
+                          return;
+                        }
+
+                        const fileSizeInBytes = files[0].size;
+                        const fileSizeInKB = fileSizeInBytes / 1024;
+                        const fileSizeInMB = fileSizeInKB / 1024;
+
+                        if (fileSizeInMB > 2) {
+                          setResumeError(true);
+                          e.target.value = "";
+                          return;
+                        }
+
+                        fileInputHandler("resumePhoto", files[0]);
+                      }}
+                      accept="image/png, image/jpeg, image/jpg"
+                      hidden
+                    />
+                  </div>
                 </div>
               </div>
             </main>

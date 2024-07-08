@@ -36,7 +36,7 @@ const AddEmployeeSuccess = ({
       <h2 className="text-3xl font-medium my-8">Employee added!</h2>
       <div className="flex min-[500px]:flex-row flex-col min-[500px]:gap-x-3 gap-y-3 min-[500px]:justify-center">
         <Button
-          className={cn("bg-[#182CE3] hover:bg-[#182CE3]", font.className)}
+          className={cn("bg-[#182CE3] hover:bg-[#182CE3]")}
           onClick={() => {
             setAddEmployeeSuccess(false);
             userDetailsForm.reset();

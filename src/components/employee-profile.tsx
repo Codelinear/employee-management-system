@@ -5,19 +5,20 @@ import Header from "@/components/navbar";
 import BackIcon from "@/components/ui/back-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import Upload from "@/components/ui/upload";
 import { Inter } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/store";
+import { saveAs } from "file-saver";
 import ImagePlaceholder from "@/components/ui/image-placeholder";
 import { v4 as uuidv4 } from "uuid";
 import { parse, differenceInYears } from "date-fns";
 import { getAssets } from "@/lib/actions/get-assets";
 import { Assets } from "@prisma/client";
-import { saveAs } from "file-saver";
 import { format } from "date-fns";
 import { stringify } from "csv-stringify/sync";
 import ListLoading from "./list-loading";
+import DownloadIcon from "@/components/ui/download-icon";
+import { useToast } from "./ui/use-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,6 +33,8 @@ const EmployeeDetails = ({
   const [employeeAssets, setEmployeeAssets] = useState<Assets[]>([]);
 
   const { currentEmployee } = useStore();
+
+  const { toast } = useToast();
 
   const router = useRouter();
 
@@ -110,11 +113,13 @@ const EmployeeDetails = ({
       <main className="px-7 sm:px-14 pt-10">
         <div className="mb-5 flex items-center justify-start">
           <div
-            className="cursor-pointer flex items-center justify-start"
+            className="cursor-pointer flex items-center gap-x-2 justify-start"
             onClick={() => setIsViewDetails(false)}
           >
             <BackIcon />
-            <span className="ml-3 font-medium text-sm">Go back</span>
+            <span className={`font-medium text-sm ${inter.className}`}>
+              Go back
+            </span>
           </div>
         </div>
 
@@ -123,45 +128,57 @@ const EmployeeDetails = ({
             <ImagePlaceholder />
           </div>
 
-          <div className="sm:ml-14 grid grid-cols-1 sm:grid-cols-2 gap-x-14 gap-y-4 grid-rows-8 sm:grid-rows-4 max-lg:mb-10">
-            <div>
-              <p className="opacity-70 text-black text-xs">Employee name</p>
-              <p className="text-lg">{currentEmployee.name}</p>
+          <div className="flex lg:flex-row flex-col">
+            <div className="sm:ml-14 grid grid-cols-1 sm:grid-cols-2 gap-x-14 gap-y-4 grid-rows-8 sm:grid-rows-4 max-lg:mb-10">
+              <div>
+                <p className="opacity-70 text-black text-xs">Employee name</p>
+                <p className="text-lg">{currentEmployee.name}</p>
+              </div>
+              <div>
+                <p className="opacity-70 text-black text-xs">Employee ID</p>
+                <p className="text-lg">{currentEmployee.employeeId}</p>
+              </div>
+              <div>
+                <p className="opacity-70 text-black text-xs">
+                  Company Email Address
+                </p>
+                <p className="text-lg">{currentEmployee.companyEmail}</p>
+              </div>
+              <div>
+                <p className="opacity-70 text-black text-xs">
+                  Personal Email Address
+                </p>
+                <p className="text-lg">{currentEmployee.personalEmail}</p>
+              </div>
+              <div>
+                <p className="opacity-70 text-black text-xs">Department</p>
+                <p className="text-lg">{currentEmployee.department}</p>
+              </div>
+              <div>
+                <p className="opacity-70 text-black text-xs">Phone number</p>
+                <p className="text-lg">{currentEmployee.phone}</p>
+              </div>
+              <div>
+                <p className="opacity-70 text-black text-xs">Current role</p>
+                <p className="text-lg">{currentEmployee.currentRole}</p>
+              </div>
+              <div>
+                <p className="opacity-70 text-black text-xs">Employed years</p>
+                <p className="text-lg">
+                  {employedYears.current || "Less than a year"}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="opacity-70 text-black text-xs">Employee ID</p>
-              <p className="text-lg">{currentEmployee.employeeId}</p>
-            </div>
-            <div>
-              <p className="opacity-70 text-black text-xs">
-                Company Email Address
-              </p>
-              <p className="text-lg">{currentEmployee.companyEmail}</p>
-            </div>
-            <div>
-              <p className="opacity-70 text-black text-xs">
-                Personal Email Address
-              </p>
-              <p className="text-lg">{currentEmployee.personalEmail}</p>
-            </div>
-            <div>
-              <p className="opacity-70 text-black text-xs">Department</p>
-              <p className="text-lg">{currentEmployee.department}</p>
-            </div>
-            <div>
-              <p className="opacity-70 text-black text-xs">Phone number</p>
-              <p className="text-lg">{currentEmployee.phone}</p>
-            </div>
-            <div>
-              <p className="opacity-70 text-black text-xs">Current role</p>
-              <p className="text-lg">{currentEmployee.currentRole}</p>
-            </div>
-            <div>
-              <p className="opacity-70 text-black text-xs">Employed years</p>
-              <p className="text-lg">
-                {employedYears.current || "Less than a year"}
-              </p>
-            </div>
+            <Button
+              className={
+                "bg-[#182CE3] sm:w-4/5 lg:w-auto sm:mx-auto rounded-lg lg:ml-32 hover:bg-[#182CE3]"
+              }
+              onClick={() => {
+                saveAs(currentEmployee.resumePhotoUrl, "image.jpg");
+              }}
+            >
+              View Resume
+            </Button>
           </div>
         </div>
 
@@ -223,9 +240,26 @@ const EmployeeDetails = ({
                   "border border-[#00000033] text-black rounded-md bg-transparent hover:bg-transparent",
                   inter.className
                 )}
+                onClick={async () => {
+                  const { panPhotoUrl, name, panNumber } = currentEmployee;
+
+                  if (panPhotoUrl) {
+                    saveAs(panPhotoUrl, `${name}-aadhaar-card.jpg`);
+                  } else {
+                    await navigator.clipboard.writeText(panNumber);
+                    toast({
+                      title: "Copied to clipboard",
+                      duration: 2000,
+                    });
+                  }
+                }}
               >
                 <span>{currentEmployee?.panNumber}</span>
-                {/* <Upload /> */}
+                {currentEmployee?.panPhotoUrl && (
+                  <div className="cursor-pointer ml-3">
+                    <DownloadIcon />
+                  </div>
+                )}
               </Button>
             </div>
 
@@ -236,28 +270,56 @@ const EmployeeDetails = ({
                   "border border-[#00000033] text-black rounded-md bg-transparent hover:bg-transparent",
                   inter.className
                 )}
+                onClick={async () => {
+                  const { aadhaarPhotoUrl, name, aadhaarNumber } =
+                    currentEmployee;
+
+                  if (aadhaarPhotoUrl) {
+                    saveAs(aadhaarPhotoUrl, `${name}-aadhaar-card.jpg`);
+                  } else {
+                    await navigator.clipboard.writeText(aadhaarNumber);
+                    toast({
+                      title: "Copied to clipboard",
+                      duration: 2000,
+                    });
+                  }
+                }}
               >
                 <span>
                   {currentEmployee?.aadhaarNumber.slice(0, 4)}{" "}
                   {currentEmployee?.aadhaarNumber.slice(4, 8)}{" "}
                   {currentEmployee?.aadhaarNumber.slice(8)}
                 </span>
-                {/* <Upload /> */}
+                {currentEmployee?.aadhaarPhotoUrl && (
+                  <div className="cursor-pointer ml-3">
+                    <DownloadIcon />
+                  </div>
+                )}{" "}
               </Button>
             </div>
 
-            {/* <div>
+            <div>
               <p className="opacity-70 mb-1 text-sm">Resume</p>
               <Button
                 className={cn(
                   "border border-[#00000033] text-black rounded-md bg-transparent hover:bg-transparent",
                   inter.className
                 )}
+                onClick={async () =>
+                  saveAs(
+                    currentEmployee.resumePhotoUrl!,
+                    `${currentEmployee.name}-resume.jpg`
+                  )
+                }
               >
-                <span className="mr-3">Resume</span>
-                <Upload />
+                <span>Resume</span>
+                {currentEmployee?.resumePhotoUrl && (
+                  <div className="cursor-pointer ml-3">
+                    <DownloadIcon />
+                  </div>
+                )}{" "}
               </Button>
-            </div> */}
+            </div>
           </div>
         </div>
       </main>

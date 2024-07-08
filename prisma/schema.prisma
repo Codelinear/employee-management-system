@@ -38,6 +38,9 @@ model Employee {
   aadhaarNumber String   @unique
   createdAt     DateTime @default(now())
   assets        Assets[]
+  panPhotoUrl   String?
+  aadhaarPhotoUrl String?
+  resumePhotoUrl String
 
   @@index([name, employeeId])
 }
